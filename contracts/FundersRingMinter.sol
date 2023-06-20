@@ -261,7 +261,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
                 current_date: block.timestamp
             });
         }
-        if (numRings <= 0 && numRings > 20) {
+        if (numRings <= 0 || numRings > 20) {
             revert IncorrectPurchaseLimit();
         }
         _mintTokensCheckingValue(ringType, numRings, msg.sender);
@@ -286,7 +286,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
                 current_date: block.timestamp
             });
         }
-        if (numRings <= 0 && numRings > 20) {
+        if (numRings <= 0 || numRings > 20) {
             revert IncorrectPurchaseLimit();
         }
         // verify allowlist
@@ -449,7 +449,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         uint256 localCounter = ringsMinted[uint256(ringType)] +
             ringTypeLocalOffset[uint256(ringType)];
         require(localCounter <= 4294967295, "Local index overflow.");
-        require(uint256(ringType) <= 255, "Ring index overflow");
+        require(uint256(ringType) <= 255, "Ring index overflow.");
 
         return (globalCounter << 40) + (localCounter << 8) + uint256(ringType);
     }
