@@ -11,12 +11,12 @@ async function main() {
     console.log('Funders Ring Contract Address:', fundersRingContract.address);
 
     // Deploy Funders Ring Minter Contract
-    const FundersRingMinterContract = await ethers.getContractFactory("RingMinter");
+    const FundersRingMinterContract = await ethers.getContractFactory("FundersRingMinter");
     const fundersRingMinterContract = await FundersRingMinterContract.deploy(fundersRingContract.address);
     console.log('Funders Ring Minter Address:', fundersRingMinterContract.address);
 
     // Set primary minter
-    let tx = await fundersRingContract.setPrimaryMinter(fundersRingMinterContract.address);
+    let tx = await fundersRingContract.setMinter(fundersRingMinterContract.address);
     console.log(tx);
     let re = await tx.wait();
     console.log(re);
