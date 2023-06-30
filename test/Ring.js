@@ -85,16 +85,16 @@ describe("🔥 Mint test", function () {
         await fundersRingMinter.setMintlistStartTime(mintListStartTime);
         await fundersRingMinter.setClaimsStartTime(mintClaimStartTime);
 
-        await expect(fundersRingMinter.mint(0, 1, { value: ethers.utils.parseEther("0.01") })).to.be.revertedWithCustomError(fundersRingMinter, "WrongDateForProcess");
+        await expect(fundersRingMinter.mint(1, { value: ethers.utils.parseEther("0.01") })).to.be.revertedWithCustomError(fundersRingMinter, "WrongDateForProcess");
         await fundersRingMinter.setPublicMintStartTime(mintStartTime);
-        await expect(fundersRingMinter.mint(0, 1, { value: ethers.utils.parseEther("0.02") })).to.be.revertedWith("Ether value sent is not accurate.");
-        await fundersRingMinter.mint(2, 1, { value: ethers.utils.parseEther("0.01") });
-        await fundersRingMinter.mint(3, 20, { value: ethers.utils.parseEther("0.20") });
-        await fundersRingMinter.mint(3, 20, { value: ethers.utils.parseEther("0.20") });
-        await fundersRingMinter.mint(3, 20, { value: ethers.utils.parseEther("0.20") });
-        await fundersRingMinter.mint(3, 20, { value: ethers.utils.parseEther("0.20") });
-        await fundersRingMinter.mint(3, 20, { value: ethers.utils.parseEther("0.20") });
-        await expect(fundersRingMinter.mint(3, 21, { value: ethers.utils.parseEther("0.21") })).to.be.revertedWithCustomError(fundersRingMinter, "IncorrectPurchaseLimit");
+        await expect(fundersRingMinter.mint(1, { value: ethers.utils.parseEther("0.02") })).to.be.revertedWith("Ether value sent is not accurate.");
+        await fundersRingMinter.mint(1, { value: ethers.utils.parseEther("0.01") });
+        await fundersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        await fundersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        await fundersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        await fundersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        await fundersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        await expect(fundersRingMinter.mint(21, { value: ethers.utils.parseEther("0.21") })).to.be.revertedWithCustomError(fundersRingMinter, "IncorrectPurchaseLimit");
 
         // Search for events to know minted rings
         const sentLogs = await fundersRing.queryFilter(
@@ -115,7 +115,7 @@ describe("🔥 Mint test", function () {
             owned.add(tokenId.toString());
         }
         const tokenIds = Array.from(owned);
-        expect((await fundersRingMinter.getTokenIdRingType(tokenIds[0]))).to.equal(2);
+        expect((await fundersRingMinter.getTokenIdRingType(tokenIds[0]))).to.lessThan(101);
 
         // Withdraw test
         var beforeWithdraw = await fundersRingMinter.provider.getBalance(owner.address);
@@ -287,33 +287,33 @@ describe("🔥 White list test", function () {
         await fundersRingMinter.setClaimsStartTime(mintClaimStartTime);
 
         // Mint list has not started
-        await expect(fundersRingMinter.mintlistMint(0, 1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWithCustomError(fundersRingMinter, "WrongDateForProcess");
+        await expect(fundersRingMinter.mintlistMint(1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWithCustomError(fundersRingMinter, "WrongDateForProcess");
         await fundersRingMinter.setMintlistStartTime(mintListStartTime);
 
         // Dummy Merkle
         await fundersRingMinter.setMintlistMerkleRoot1("0xaaaaa5fd3d1fd2023357cc245f795fb7129bc2bc646df8b1dc9fb1f4342e4091");
 
         // Corret proof bad Merkle
-        await expect(fundersRingMinter.mintlistMint(0, 1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Invalid proof.");
+        await expect(fundersRingMinter.mintlistMint(1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Invalid proof.");
 
         // Good Merkle in second tree
         await fundersRingMinter.setMintlistMerkleRoot2("0x194a85fd3d1fd2023357cc245f795fb7129bc2bc646df8b1dc9fb1f4342e4091");
 
         // Correct in second merkle
-        await fundersRingMinter.mintlistMint(0, 1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") });
+        await fundersRingMinter.mintlistMint(1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") });
 
         // Swap
         await fundersRingMinter.setMintlistMerkleRoot1("0x194a85fd3d1fd2023357cc245f795fb7129bc2bc646df8b1dc9fb1f4342e4091");
         await fundersRingMinter.setMintlistMerkleRoot2("0xaaaaa5fd3d1fd2023357cc245f795fb7129bc2bc646df8b1dc9fb1f4342e4091");
 
         // Still correct and last avialable plot for this wallet
-        await fundersRingMinter.mintlistMint(0, 1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") });
+        await fundersRingMinter.mintlistMint(1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") });
 
         // Mints with invalid proof
-        await expect(fundersRingMinter.mintlistMint(0, 1, 2, ["0xae0840ecd9936be1fa9a01a65174f8b8917233e75dd92c89cea9372282f6703b"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Invalid proof.");
+        await expect(fundersRingMinter.mintlistMint(1, 2, ["0xae0840ecd9936be1fa9a01a65174f8b8917233e75dd92c89cea9372282f6703b"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Invalid proof.");
 
         // Ran out of slots
-        await expect(fundersRingMinter.mintlistMint(0, 1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Minting more than allowed.");
+        await expect(fundersRingMinter.mintlistMint(1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Minting more than allowed.");
     });
 });
 
@@ -341,20 +341,20 @@ describe("🔥 Claim list test", function () {
 
 
         // Claim list has not started
-        await expect(fundersRingMinter.claimlistMint(0, 1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWithCustomError(fundersRingMinter, "WrongDateForProcess");
+        await expect(fundersRingMinter.claimlistMint(1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWithCustomError(fundersRingMinter, "WrongDateForProcess");
         await fundersRingMinter.setClaimsStartTime(mintClaimStartTime);
         await fundersRingMinter.setClaimsStartTime(mintListStartTime);
         await fundersRingMinter.setClaimlistMerkleRoot("0x194a85fd3d1fd2023357cc245f795fb7129bc2bc646df8b1dc9fb1f4342e4091");
 
         // Mints with invalid proof
-        await expect(fundersRingMinter.claimlistMint(0, 1, 2, ["0xae0840ecd9936be1fa9a01a65174f8b8917233e75dd92c89cea9372282f6703b"])).to.be.revertedWith("Invalid proof.");
+        await expect(fundersRingMinter.claimlistMint(1, 2, ["0xae0840ecd9936be1fa9a01a65174f8b8917233e75dd92c89cea9372282f6703b"])).to.be.revertedWith("Invalid proof.");
 
         // Mints with valid proof
-        await fundersRingMinter.claimlistMint(0, 1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"]);
-        await fundersRingMinter.claimlistMint(0, 1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"]);
+        await fundersRingMinter.claimlistMint(1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"]);
+        await fundersRingMinter.claimlistMint(1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"]);
 
         // Ran out of slots
-        await expect(fundersRingMinter.claimlistMint(0, 1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"])).to.be.revertedWith("Claiming more than allowed.");
+        await expect(fundersRingMinter.claimlistMint(1, 2, ["0x404ffa69e506be1899daa19c82154a85be53410304e1ebbc1fe89911fa3b9c6f"])).to.be.revertedWith("Claiming more than allowed.");
     });
 });
 

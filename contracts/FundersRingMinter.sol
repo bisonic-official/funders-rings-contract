@@ -24,6 +24,9 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
     /// @notice Total available rings.
     uint256 ringsAvailable = 10000;
 
+    /// @notice The nonce used to generate the random number.
+    uint256 randNonce = 0;
+
     uint256[] ringsProbabilitiesPerType = [
         14, // red
         14, // blue
@@ -66,13 +69,11 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
     /// @notice Stores the number actually minted per ring type.
     mapping(uint256 => uint256) public ringsMinted;
 
-    /// @notice Stores the number minted by this address in the mintlist by type.
-    mapping(address => mapping(uint256 => uint256))
-        public mintlistMintedPerType;
+    /// @notice Stores the number minted by this address in the mintlist.
+    mapping(address => uint256) public mintlistMinted;
 
-    /// @notice Stores the number minted by this address in the claimslist by type.
-    mapping(address => mapping(uint256 => uint256))
-        public claimlistMintedPerType;
+    /// @notice Stores the number minted by this address in the claimslist.
+    mapping(address => uint256) public claimlistMinted;
 
     /**
      * @dev Create the contract and set the initial baseURI.
@@ -127,18 +128,17 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
      * @dev Generates a random number to generate a ring.
      * @return ringType uint256 with ring type.
      */
-    function generateRing() external view returns (uint256) {
-        uint256 ringType;
+    function generateRing() private returns (uint256) {
+        uint256 ringType = 0;
 
-        uint256 genNumber = uint256(blockhash(block.number - 1)) % 100;
-        genNumber += 1;
+        randNonce++; // Increase nonce
+        uint256 genNumber = (uint256(
+            keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))
+        ) % 100) + 1;
 
         uint256 lowerBound = 0;
         uint256 upperBound = ringsProbabilitiesPerType[0];
 
-        if (genNumber <= upperBound) {
-            ringType = 0;
-        }
         for (uint256 i = 1; i < ringsProbabilitiesPerType.length; i++) {
             lowerBound = upperBound;
             upperBound += ringsProbabilitiesPerType[i];
@@ -248,13 +248,9 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
 
     /**
      * @dev Public method for public minting.
-     * @param ringType FundersRingType enum with ring type.
      * @param numRings uint256 Number of rings to be minted.
      */
-    function mint(
-        IFundersRing.FundersRingType ringType,
-        uint256 numRings
-    ) external payable nonReentrant {
+    function mint(uint256 numRings) external payable nonReentrant {
         if (!publicStarted()) {
             revert WrongDateForProcess({
                 correct_date: publicMintStartTime,
@@ -264,18 +260,47 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         if (numRings <= 0 || numRings > 20) {
             revert IncorrectPurchaseLimit();
         }
-        _mintTokensCheckingValue(ringType, numRings, msg.sender);
+        _mintTokensCheckingValue(numRings, msg.sender);
+    }
+
+    function freeMint(uint256 numRings) internal {
+        mintlistMinted[msg.sender] += numRings;
+        _mintTokensCheckingValue(numRings, msg.sender);
+    }
+
+    /**
+     * @dev Public method to mint with claim.
+     * @param payedMints uint256 Number of mints available.
+     * @param maxClaim uint256 Maximum number of rings that the address can mint.
+     * @param _merkleHash bytes32[] Merkle hash.
+     */
+    function mintWithClaim(
+        uint256 payedMints,
+        uint256 maxClaim,
+        bytes32[] calldata _merkleHash
+    ) external payable nonReentrant {
+        this.mint(payedMints);
+
+        uint256 alreadyClaimed = claimlistMinted[msg.sender];
+        uint256 toClaim = maxClaim - alreadyClaimed;
+
+        if (alreadyClaimed == 0) {
+            freeMint(1);
+            toClaim--;
+        }
+
+        if (toClaim > 0) {
+            this.claimlistMint(toClaim, maxClaim, _merkleHash);
+        }
     }
 
     /**
      * @dev Public method to mint when the whitelist (mintlist) is active.
-     * @param ringType FundersRingType enum with rint type.
      * @param numRings uint256 Number of rings to be minted.
-     * @param claimedMaxRings uint256 maximum number of rings of ringType that the address mint.
+     * @param claimedMaxRings uint256 Maximum number of rings of ringType that the address mint.
      * @param _merkleProof bytes32[] Merkle proof.
      */
     function mintlistMint(
-        IFundersRing.FundersRingType ringType,
         uint256 numRings,
         uint256 claimedMaxRings,
         bytes32[] calldata _merkleProof
@@ -291,13 +316,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         }
         // verify allowlist
         bytes32 _leaf = keccak256(
-            abi.encodePacked(
-                msg.sender,
-                ":",
-                uint256(ringType),
-                ":",
-                claimedMaxRings
-            )
+            abi.encodePacked(msg.sender, ":", claimedMaxRings)
         );
 
         require(
@@ -306,26 +325,23 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
             "Invalid proof."
         );
 
-        mapping(uint256 => uint256)
-            storage mintedPerType = mintlistMintedPerType[msg.sender];
+        uint256 mintedPerAddress = mintlistMinted[msg.sender];
 
         require(
-            mintedPerType[uint256(ringType)] + numRings <= claimedMaxRings, // this is verified by the merkle proof
+            mintedPerAddress + numRings <= claimedMaxRings, // this is verified by the merkle proof
             "Minting more than allowed."
         );
-        mintedPerType[uint256(ringType)] += numRings;
-        _mintTokensCheckingValue(ringType, numRings, msg.sender);
+        mintlistMinted[msg.sender] += numRings;
+        _mintTokensCheckingValue(numRings, msg.sender);
     }
 
     /**
      * @dev Public method to claim a ring, only when (claimlist) is active.
-     * @param ringType FundersRingType enum with ringType.
      * @param numRings uint256 Number of rings to be minted.
      * @param claimedMaxRings uint256 Maximum number of rings of ringType that the address mint.
      * @param _merkleProof bytes32[] Merkle proof.
      */
     function claimlistMint(
-        IFundersRing.FundersRingType ringType,
         uint256 numRings,
         uint256 claimedMaxRings,
         bytes32[] calldata _merkleProof
@@ -339,13 +355,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
 
         // verify allowlist
         bytes32 _leaf = keccak256(
-            abi.encodePacked(
-                msg.sender,
-                ":",
-                uint256(ringType),
-                ":",
-                claimedMaxRings
-            )
+            abi.encodePacked(msg.sender, ":", claimedMaxRings)
         );
 
         require(
@@ -353,25 +363,22 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
             "Invalid proof."
         );
 
-        mapping(uint256 => uint256)
-            storage mintedPerType = claimlistMintedPerType[msg.sender];
+        uint256 mintedPerAddress = claimlistMinted[msg.sender];
 
         require(
-            mintedPerType[uint256(ringType)] + numRings <= claimedMaxRings, // this is verified by the merkle proof
+            mintedPerAddress + numRings <= claimedMaxRings, // this is verified by the merkle proof
             "Claiming more than allowed."
         );
-        mintedPerType[uint256(ringType)] += numRings;
-        _mintTokens(ringType, numRings, msg.sender);
+        claimlistMinted[msg.sender] += numRings;
+        _mintTokens(numRings, msg.sender);
     }
 
     /**
      * @dev Checks if the amount sent is correct. Continue minting if it's correct.
-     * @param ringType FundersRingType enum with ting type.
      * @param numRings uint256 Number of rings to be minted.
      * @param recipient address Address that sent the mint.
      */
     function _mintTokensCheckingValue(
-        IFundersRing.FundersRingType ringType,
         uint256 numRings,
         address recipient
     ) private {
@@ -382,31 +389,32 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
             msg.value == ringPrice * numRings,
             "Ether value sent is not accurate."
         );
-        _mintTokens(ringType, numRings, recipient);
+        _mintTokens(numRings, recipient);
     }
 
     /**
      * @dev Checks if there are rings available.
      * Final step before sending it to FundersRing contract.
-     * @param ringType FundersRingType enum with ring typeñ.
      * @param numRings uint256 Number of rings to be minted.
      * @param recipient address Address that sent the mint.
      */
-    function _mintTokens(
-        IFundersRing.FundersRingType ringType,
-        uint256 numRings,
-        address recipient
-    ) private {
+    function _mintTokens(uint256 numRings, address recipient) private {
         require(
-            ringsMinted[uint256(ringType)] + numRings <= ringsAvailable,
+            this.getTotalMintedRings() + numRings <= this.getAvailableRings(),
             "Trying to mint too many rings."
         );
 
         for (uint256 i; i < numRings; ++i) {
-            uint256 tokenId = ownerGetNextTokenId(ringType);
+            uint256 ringType = generateRing(); // Generate random ring type
+
+            // Cast uint256 to enum
+            IFundersRing.FundersRingType ringTypeCast = IFundersRing
+                .FundersRingType(ringType);
+
+            uint256 tokenId = ownerGetNextTokenId(ringTypeCast);
             ++ringsMinted[uint256(ringType)];
 
-            fundersRing.mintTokenId(recipient, tokenId, ringType);
+            fundersRing.mintTokenId(recipient, tokenId, ringTypeCast);
         }
     }
 
@@ -425,7 +433,8 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
             "Arrays should have the same size."
         );
         for (uint256 i; i < recipients.length; ++i) {
-            _mintTokens(ringTypes[i], 1, recipients[i]);
+            uint256 tokenId = ownerGetNextTokenId(ringTypes[i]);
+            fundersRing.mintTokenId(recipients[i], tokenId, ringTypes[i]);
         }
     }
 
