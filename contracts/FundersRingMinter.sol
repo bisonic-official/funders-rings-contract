@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./IFundersRing.sol";
+import "hardhat/console.sol";
 
 contract FundersRingMinter is Ownable, ReentrancyGuard {
     using Address for address payable;
@@ -223,6 +224,14 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @dev Returns the number of rings left of each type.
+     * @return ringsProbabilitiesPerType Array uint256 with rings probabilities per type.
+     */
+    function getProbabilities() external view returns (uint256[] memory) {
+        return ringsProbabilitiesPerType;
+    }
+
+    /**
      * @dev Mint public method to mint when the whitelist (mintlist) is active.
      * @param _who address Address that is minting.
      * @param _leaf bytes32 Merkle leaf.
@@ -263,6 +272,10 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         _mintTokensCheckingValue(numRings, msg.sender);
     }
 
+    /**
+     * @dev Public method for free minting.
+     * @param numRings uint256 Number of rings to be minted.
+     */
     function freeMint(uint256 numRings) internal {
         mintlistMinted[msg.sender] += numRings;
         _mintTokensCheckingValue(numRings, msg.sender);
@@ -278,7 +291,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         uint256 payedMints,
         uint256 maxClaim,
         bytes32[] calldata _merkleHash
-    ) external payable nonReentrant {
+    ) external payable {
         this.mint(payedMints);
 
         uint256 alreadyClaimed = claimlistMinted[msg.sender];
@@ -297,7 +310,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
     /**
      * @dev Public method to mint when the whitelist (mintlist) is active.
      * @param numRings uint256 Number of rings to be minted.
-     * @param claimedMaxRings uint256 Maximum number of rings of ringType that the address mint.
+     * @param claimedMaxRings uint256 Maximum number of rings that the address mint.
      * @param _merkleProof bytes32[] Merkle proof.
      */
     function mintlistMint(
@@ -434,6 +447,8 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         );
         for (uint256 i; i < recipients.length; ++i) {
             uint256 tokenId = ownerGetNextTokenId(ringTypes[i]);
+            ++ringsMinted[uint256(ringTypes[i])];
+
             fundersRing.mintTokenId(recipients[i], tokenId, ringTypes[i]);
         }
     }
@@ -592,6 +607,40 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
             revert DeniedProcessDuringMinting();
         }
         ringPrice = _newPrice;
+    }
+
+    /**
+     * @dev Assigns the new ring probabilities for each ring type.
+     * @param _newProbabilities uint256[] Ring probabilities.
+     */
+    function setProbabilities(
+        uint256[] calldata _newProbabilities
+    ) external onlyOwner {
+        uint256 totalProbabilities = 0;
+
+        for (uint256 i = 0; i < _newProbabilities.length; i++) {
+            totalProbabilities += _newProbabilities[i];
+        }
+
+        if (totalProbabilities != 100) {
+            revert GivenValuesNotValid({
+                sended_values: totalProbabilities,
+                expected: 100
+            });
+        }
+
+        if (_newProbabilities.length != 8) {
+            revert GivenValuesNotValid({
+                sended_values: _newProbabilities.length,
+                expected: 8
+            });
+        }
+
+        if (mintlistStarted()) {
+            revert DeniedProcessDuringMinting();
+        }
+
+        ringsProbabilitiesPerType = _newProbabilities;
     }
 
     /**
