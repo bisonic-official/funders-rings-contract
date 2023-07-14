@@ -79,6 +79,11 @@ describe("🔥 Mint test", function () {
         const fundersRingMinter = await FundersRingMinter.deploy(fundersRing.address);
         fundersRing.setMinter(fundersRingMinter.address);
 
+        // Set available rings
+        await fundersRingMinter.setRingsAvailable(200);
+        const availableRings = await fundersRingMinter.getInitialRings();
+        expect(availableRings).to.deep.equal(200);
+
         const ringPrice = ethers.utils.parseEther("0.01");
         const mintClaimStartTime = ethers.BigNumber.from("0");
         const mintListStartTime = ethers.BigNumber.from("0");
@@ -147,6 +152,10 @@ describe("🔥 Mint test", function () {
         expect(await fundersRingMinter.provider.getBalance(fundersRingMinter.address)).to.equal(mintClaimStartTime);
 
         await fundersRing.withdrawAll();
+
+        // So far, 101 rings have been minted
+        const totalSupply = await fundersRing.totalSupply();
+        expect(totalSupply).to.equal(101);
     });
 
     it("Test free mints + claim with mint functions", async function () {

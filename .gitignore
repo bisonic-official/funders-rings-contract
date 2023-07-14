@@ -4,6 +4,7 @@ config_*.ini
 *.log
 *.pem
 node_modules
+coverage*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
