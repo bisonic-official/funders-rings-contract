@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./IFundersRing.sol";
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract FundersRingMinter is Ownable, ReentrancyGuard {
     using Address for address payable;
@@ -260,6 +261,14 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
      * @param numRings uint256 Number of rings to be minted.
      */
     function mint(uint256 numRings) external payable nonReentrant {
+        privateMint(numRings);
+    }
+
+    /**
+     * @dev Private method for public minting.
+     * @param numRings uint256 Number of rings to be minted.
+     */
+    function privateMint(uint256 numRings) private {
         if (!publicStarted()) {
             revert WrongDateForProcess({
                 correct_date: publicMintStartTime,
@@ -276,23 +285,23 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
      * @dev Public method for free minting.
      * @param numRings uint256 Number of rings to be minted.
      */
-    function freeMint(uint256 numRings) internal {
+    function freeMint(uint256 numRings) private {
         mintlistMinted[msg.sender] += numRings;
-        _mintTokensCheckingValue(numRings, msg.sender);
+        _mintTokens(numRings, msg.sender);
     }
 
     /**
      * @dev Public method to mint with claim.
      * @param payedMints uint256 Number of mints available.
      * @param maxClaim uint256 Maximum number of rings that the address can mint.
-     * @param _merkleHash bytes32[] Merkle hash.
+     * @param _merkleProof bytes32[] Merkle proof.
      */
     function mintWithClaim(
         uint256 payedMints,
         uint256 maxClaim,
-        bytes32[] calldata _merkleHash
+        bytes32[] calldata _merkleProof
     ) external payable {
-        this.mint(payedMints);
+        privateMint(payedMints);
 
         uint256 alreadyClaimed = claimlistMinted[msg.sender];
         uint256 toClaim = maxClaim - alreadyClaimed;
@@ -303,7 +312,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         }
 
         if (toClaim > 0) {
-            this.claimlistMint(toClaim, maxClaim, _merkleHash);
+            this.claimlistMint(toClaim, maxClaim, _merkleProof);
         }
     }
 
@@ -417,7 +426,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
             "Trying to mint too many rings."
         );
 
-        for (uint256 i; i < numRings; ++i) {
+        for (uint256 i = 0; i < numRings; ++i) {
             uint256 ringType = generateRing(); // Generate random ring type
 
             // Cast uint256 to enum
@@ -445,7 +454,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
             ringTypes.length == recipients.length,
             "Arrays should have the same size."
         );
-        for (uint256 i; i < recipients.length; ++i) {
+        for (uint256 i = 0; i < recipients.length; ++i) {
             uint256 tokenId = ownerGetNextTokenId(ringTypes[i]);
             ++ringsMinted[uint256(ringTypes[i])];
 

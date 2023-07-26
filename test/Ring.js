@@ -157,36 +157,6 @@ describe("🔥 Mint test", function () {
         const totalSupply = await fundersRing.totalSupply();
         expect(totalSupply).to.equal(101);
     });
-
-    it("Test free mints + claim with mint functions", async function () {
-        const [owner] = await ethers.getSigners();
-
-        const FundersRing = await ethers.getContractFactory("FundersRing");
-        const fundersRing = await FundersRing.deploy("http://d9grnqbmunyb9.cloudfront.net/GetPlotId?PlotId=");
-
-        const FundersRingMinter = await ethers.getContractFactory("FundersRingMinter");
-        const fundersRingMinter = await FundersRingMinter.deploy(fundersRing.address);
-        fundersRing.setMinter(fundersRingMinter.address);
-
-        const ringPrice = ethers.utils.parseEther("0.01");
-        const mintClaimStartTime = ethers.BigNumber.from("0");
-        const mintListStartTime = ethers.BigNumber.from("0");
-        const mintStartTime = ethers.BigNumber.from("0");
-
-        const blockNumBefore = await ethers.provider.getBlockNumber();
-        const blockBefore = await ethers.provider.getBlock(blockNumBefore);
-        const startPublicSale = blockBefore.timestamp + 1000;
-
-        await fundersRingMinter.setPrice(ringPrice);
-        await fundersRingMinter.setPublicMintStartTime(startPublicSale);
-        await fundersRingMinter.setMintlistStartTime(mintListStartTime);
-        await fundersRingMinter.setClaimsStartTime(mintClaimStartTime);
-        await fundersRingMinter.setPublicMintStartTime(mintStartTime);
-
-        await expect(fundersRingMinter.mintWithClaim(2, 3, [
-            "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Ether value sent is not accurate.");
-    });
 });
 
 describe("🔥 URI test", function () {
@@ -374,7 +344,7 @@ describe("🔥 Whitelist test", function () {
     });
 });
 
-describe("🔥 Claimlist test", function () {
+describe("🔥 Claimlist test + Mint with claim", function () {
     it("Claimlist should work", async function () {
         const [owner] = await ethers.getSigners();
 
@@ -418,6 +388,15 @@ describe("🔥 Claimlist test", function () {
         await expect(fundersRingMinter.claimlistMint(1, 2, [
             "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
         ])).to.be.revertedWith("Claiming more than allowed.");
+
+        // Test free mints and mint with claim
+        await fundersRingMinter.mintWithClaim(1, 2, [
+            "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
+        ], { value: ethers.utils.parseEther("0.01") });
+
+        await expect(fundersRingMinter.mintWithClaim(2, 3, [
+            "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
+        ], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Ether value sent is not accurate.");
     });
 });
 
