@@ -233,30 +233,6 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Mint public method to mint when the whitelist (mintlist) is active.
-     * @param _who address Address that is minting.
-     * @param _leaf bytes32 Merkle leaf.
-     * @param _merkleProof bytes32[] Merkle proof.
-     * @return mintlisted bool Success mint.
-     */
-    function mintlisted(
-        address _who,
-        bytes32 _leaf,
-        bytes32[] calldata _merkleProof
-    ) external view returns (bool) {
-        bytes32 node = keccak256(abi.encodePacked(_who));
-
-        if (node != _leaf) return false;
-        if (
-            MerkleProof.verify(_merkleProof, mintlistMerkleRoot1, _leaf) ||
-            MerkleProof.verify(_merkleProof, mintlistMerkleRoot2, _leaf)
-        ) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * @dev Public method for public minting.
      * @param numRings uint256 Number of rings to be minted.
      */
@@ -286,7 +262,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
      * @param numRings uint256 Number of rings to be minted.
      */
     function freeMint(uint256 numRings) private {
-        mintlistMinted[msg.sender] += numRings;
+        claimlistMinted[msg.sender] += numRings;
         _mintTokens(numRings, msg.sender);
     }
 
@@ -301,9 +277,16 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         uint256 maxClaim,
         bytes32[] calldata _merkleProof
     ) external payable {
-        privateMint(payedMints);
-
         uint256 alreadyClaimed = claimlistMinted[msg.sender];
+
+        if (alreadyClaimed == 0 && payedMints == 0) {
+            revert ClaimWithoutPurchase();
+        }
+
+        if (payedMints > 0) {
+            privateMint(payedMints);
+        }
+
         uint256 toClaim = maxClaim - alreadyClaimed;
 
         if (alreadyClaimed == 0) {
@@ -312,7 +295,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         }
 
         if (toClaim > 0) {
-            this.claimlistMint(toClaim, maxClaim, _merkleProof);
+            claimlistMint(toClaim, maxClaim, _merkleProof);
         }
     }
 
@@ -367,7 +350,7 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
         uint256 numRings,
         uint256 claimedMaxRings,
         bytes32[] calldata _merkleProof
-    ) external payable nonReentrant {
+    ) private nonReentrant {
         if (!claimsStarted()) {
             revert WrongDateForProcess({
                 correct_date: claimsStartTime,
@@ -691,6 +674,9 @@ contract FundersRingMinter is Ownable, ReentrancyGuard {
 
     /// Incorrect Purchase Limit, the limits are from 1 to 20 rings.
     error IncorrectPurchaseLimit();
+
+    /// Incorrect Purchase Limit, the limits are from 1 to 20 rings.
+    error ClaimWithoutPurchase();
 
     /// MisconfiguredPrices, the price of that ring type is not configured yet.
     error MisconfiguredPrices();

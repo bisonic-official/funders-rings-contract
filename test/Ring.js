@@ -344,7 +344,7 @@ describe("🔥 Whitelist test", function () {
     });
 });
 
-describe("🔥 Claimlist test + Mint with claim", function () {
+describe("🔥 Mint with claim test", function () {
     it("Claimlist should work", async function () {
         const [owner] = await ethers.getSigners();
 
@@ -367,32 +367,20 @@ describe("🔥 Claimlist test + Mint with claim", function () {
         await fundersRingMinter.setMintlistStartTime(mintListFarTime);
 
 
-        // Claim list has not started
-        await expect(fundersRingMinter.claimlistMint(1, 2, [
-            "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWithCustomError(fundersRingMinter, "WrongDateForProcess");
+        // Claim list has started
         await fundersRingMinter.setClaimsStartTime(mintClaimStartTime);
         await fundersRingMinter.setClaimsStartTime(mintListStartTime);
         await fundersRingMinter.setClaimlistMerkleRoot("0x1fbda4e7390960252c56ff025100919fcb353ee8ba83f9726c613ba2368c62c3");
 
-        // Mints with invalid proof
-        await expect(fundersRingMinter.claimlistMint(1, 2, [
-            "0xaaaaa845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ])).to.be.revertedWith("Invalid proof.");
-
-        // Mints with valid proof
-        await fundersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"]);
-        await fundersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"]);
-
-        // Ran out of slots
-        await expect(fundersRingMinter.claimlistMint(1, 2, [
+        // Test without claim
+        await expect(fundersRingMinter.mintWithClaim(0, 2, [
             "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ])).to.be.revertedWith("Claiming more than allowed.");
+        ], { value: ethers.utils.parseEther("0.00") })).to.be.revertedWithCustomError(fundersRingMinter, "ClaimWithoutPurchase");
 
         // Test free mints and mint with claim
-        await fundersRingMinter.mintWithClaim(1, 2, [
+        await fundersRingMinter.mintWithClaim(2, 2, [
             "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ], { value: ethers.utils.parseEther("0.01") });
+        ], { value: ethers.utils.parseEther("0.02") });
 
         await expect(fundersRingMinter.mintWithClaim(2, 3, [
             "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"

@@ -635,8 +635,8 @@
       ]
     },
     "/Users/rodolfoferro/Documents/GitHub/funders-rings-contract/contracts/FundersRingMinter.sol": {
-      "lastModificationDate": 1690399772009,
-      "contentHash": "0c94275e686ed10096167fa4447b550f",
+      "lastModificationDate": 1690484228718,
+      "contentHash": "cf01c91928479c0eb37bbd4d21eedde3",
       "sourceName": "contracts/FundersRingMinter.sol",
       "solcConfig": {
         "version": "0.8.18",
