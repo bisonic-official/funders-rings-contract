@@ -363,6 +363,7 @@ describe("🔥 Mint with claim test", function () {
         const mintStartTime = ethers.BigNumber.from("0");
 
         await fundersRingMinter.setPrice(ringPrice);
+        await fundersRingMinter.setRingsAvailable(ringsAvailable);
         await fundersRingMinter.setPublicMintStartTime(mintStartTime);
         await fundersRingMinter.setMintlistStartTime(mintListFarTime);
 
@@ -376,15 +377,44 @@ describe("🔥 Mint with claim test", function () {
         await expect(fundersRingMinter.mintWithClaim(0, 2, [
             "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
         ], { value: ethers.utils.parseEther("0.00") })).to.be.revertedWithCustomError(fundersRingMinter, "ClaimWithoutPurchase");
+        expect(await fundersRingMinter.getTotalMintedRings()).to.be.equal(0);
 
         // Test free mints and mint with claim
         await fundersRingMinter.mintWithClaim(2, 2, [
             "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
         ], { value: ethers.utils.parseEther("0.02") });
+        expect(await fundersRingMinter.getTotalMintedRings()).to.be.equal(4);
 
         await expect(fundersRingMinter.mintWithClaim(2, 3, [
             "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
         ], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Ether value sent is not accurate.");
+
+        // Reset claim list merkle root and try new claims
+        await fundersRingMinter.setClaimlistMerkleRoot("0xad37b8c27cd08865b8c30d7b54719f3309caa2c6d756ce1906cdc3fa0e5cb21a");
+        await fundersRingMinter.mintWithClaim(3, 2, [
+            "0xf59134dcea639b911f5899a7f065e3549bc9eedae7a0821a5d9a027050faad14"
+        ], { value: ethers.utils.parseEther("0.03") });
+        expect(await fundersRingMinter.getTotalMintedRings()).to.be.equal(7);
+
+        // Reset claim list merkle root and try new claims
+        await fundersRingMinter.setClaimlistMerkleRoot("0x2c0e66aa5e103a36c4e17aae24f2537872a416c02305d2c24fa0175c6d8f73a1");
+        await fundersRingMinter.mintWithClaim(10, 5, [
+            "0xf59134dcea639b911f5899a7f065e3549bc9eedae7a0821a5d9a027050faad14"
+        ], { value: ethers.utils.parseEther("0.10") });
+        expect(await fundersRingMinter.getTotalMintedRings()).to.be.equal(20);
+
+        await fundersRingMinter.mintWithClaim(10, 5, [
+            "0xf59134dcea639b911f5899a7f065e3549bc9eedae7a0821a5d9a027050faad14"
+        ], { value: ethers.utils.parseEther("0.10") });
+        expect(await fundersRingMinter.getTotalMintedRings()).to.be.equal(30);
+
+        // Reset claim list merkle root and try new claims
+        await fundersRingMinter.setClaimlistMerkleRoot("0xee77886d6fce31eba8f6eeee091cc374760601d21ee719061a4876d89b3185ce");
+        await fundersRingMinter.mintWithClaim(0, 15, [
+            "0xf59134dcea639b911f5899a7f065e3549bc9eedae7a0821a5d9a027050faad14"
+        ], { value: ethers.utils.parseEther("0.00") });
+        expect(await fundersRingMinter.getTotalMintedRings()).to.be.equal(40);
+
     });
 });
 
