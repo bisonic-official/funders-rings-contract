@@ -1,0 +1,2135 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/WatchersRingMinter.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> WatchersRingMinter.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">97.59% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>81/83</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">59.26% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>64/108</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">97.37% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>37/38</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">90.78% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>128/141</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528
+529
+530
+531
+532
+533
+534
+535
+536
+537
+538
+539
+540
+541
+542
+543
+544
+545
+546
+547
+548
+549
+550
+551
+552
+553
+554
+555
+556
+557
+558
+559
+560
+561
+562
+563
+564
+565
+566
+567
+568
+569
+570
+571
+572
+573
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592
+593
+594
+595
+596
+597
+598
+599
+600
+601
+602
+603
+604
+605
+606
+607
+608
+609
+610
+611
+612
+613
+614
+615
+616
+617
+618
+619
+620
+621
+622
+623
+624
+625
+626
+627
+628
+629
+630
+631
+632
+633
+634
+635
+636
+637
+638
+639
+640
+641
+642
+643
+644
+645
+646
+647
+648
+649
+650
+651
+652
+653
+654
+655
+656
+657
+658
+659
+660
+661
+662
+663
+664
+665
+666
+667
+668
+669
+670
+671
+672
+673
+674
+675
+676
+677
+678
+679
+680
+681
+682
+683
+684
+685
+686
+687
+688
+689
+690
+691</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27×</span>
+<span class="cline-any cline-yes">27×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-yes">570×</span>
+<span class="cline-any cline-yes">570×</span>
+<span class="cline-any cline-yes">570×</span>
+<span class="cline-any cline-yes">121×</span>
+<span class="cline-any cline-yes">121×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">22×</span>
+<span class="cline-any cline-yes">22×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">22×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">143×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">149×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">149×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">149×</span>
+<span class="cline-any cline-yes">149×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">149×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">//SPDX-License-Identifier: UNLICENSED
+&nbsp;
+// Solidity files have to start with this pragma.
+// It will be used by the Solidity compiler to validate its version.
+pragma solidity ^0.8.18;
+&nbsp;
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "./IWatchersRing.sol";
+import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+&nbsp;
+contract WatchersRingMinter is Ownable, ReentrancyGuard {
+    using Address for address payable;
+&nbsp;
+    /// @notice Address to the ERC721 WatchersRing contract.
+    IWatchersRing public watchersRing;
+&nbsp;
+    /// @notice Address to the vault where we can withdraw.
+    address payable public vault;
+&nbsp;
+    /// @notice Total available rings.
+    uint256 ringsAvailable = 700;
+&nbsp;
+    /// @notice The nonce used to generate the random number.
+    uint256 randNonce = 0;
+&nbsp;
+    uint256[] ringsProbabilitiesPerType = [
+        14, // red
+        14, // blue
+        14, // yellow
+        14, // green
+        14, // brown
+        14, // white
+        14, // purple
+        2 // prismatic
+    ];
+&nbsp;
+    uint256[] public ringTypeLocalOffset = [
+        1, // red
+        1, // blue
+        1, // yellow
+        1, // green
+        1, // brown
+        1, // white
+        1, // purple
+        1 // prismatic
+    ];
+&nbsp;
+    uint256 public ringGlobalOffset = 1;
+&nbsp;
+    uint256 public ringPrice = type(uint256).max;
+&nbsp;
+    uint256 public publicMintStartTime = type(uint256).max;
+    uint256 public mintlistStartTime = type(uint256).max;
+    uint256 public claimsStartTime = type(uint256).max;
+&nbsp;
+    /// @notice The primary merkle root.
+    bytes32 public mintlistMerkleRoot1;
+&nbsp;
+    /// @notice The secondary Merkle root.
+    bytes32 public mintlistMerkleRoot2;
+&nbsp;
+    /// @notice The claimslist Merkle root.
+    bytes32 public claimlistMerkleRoot;
+&nbsp;
+    /// @notice Stores the number actually minted per ring type.
+    mapping(uint256 =&gt; uint256) public ringsMinted;
+&nbsp;
+    /// @notice Stores the number minted by this address in the mintlist.
+    mapping(address =&gt; uint256) public mintlistMinted;
+&nbsp;
+    /// @notice Stores the number minted by this address in the claimslist.
+    mapping(address =&gt; uint256) public claimlistMinted;
+&nbsp;
+    /**
+     * @dev Create the contract and set the initial baseURI.
+     * @param _watchersRing Address the initial base URI for the token metadata URL.
+     */
+    constructor(IWatchersRing _watchersRing) {
+        setWatchersRing(_watchersRing);
+        setVaultAddress(payable(msg.sender));
+    }
+&nbsp;
+    /**
+     * @dev Returns true if the whitelisted mintlist started.
+     * @return mintlistStarted true if mintlist started.
+     */
+    function mintlistStarted() public view returns (bool) {
+        return block.timestamp &gt;= mintlistStartTime;
+    }
+&nbsp;
+    /**
+     * @dev Returns true if the whitelisted claimlist started.
+     * @return mintlistStarted true if claimlist started.
+     */
+    function claimsStarted() public view returns (bool) {
+        return block.timestamp &gt;= claimsStartTime;
+    }
+&nbsp;
+    /**
+     * @dev Returns true if the public minting started.
+     * @return mintlistStarted true if public minting started.
+     */
+    function publicStarted() public view returns (bool) {
+        return block.timestamp &gt;= publicMintStartTime;
+    }
+&nbsp;
+    /**
+     * @dev Returns how many rings were available since the begining.
+     * @return getInitialRings uint256 of total elements.
+     */
+    function getInitialRings() external view returns (uint256) {
+        return ringsAvailable;
+    }
+&nbsp;
+    /**
+     * @dev Returns the eth cost per ring.
+     * @return getRingPrice uint256 with price per ring.
+     */
+    function getRingPrice() external view returns (uint256) {
+        return ringPrice;
+    }
+&nbsp;
+    /**
+     * @dev Generates a random number to generate a ring.
+     * @return ringType uint256 with ring type.
+     */
+    function generateRing() private returns (uint256) {
+        uint256 ringType = 0;
+&nbsp;
+        randNonce++; // Increase nonce
+        uint256 genNumber = (uint256(
+            keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))
+        ) % 100) + 1;
+&nbsp;
+        uint256 lowerBound = 0;
+        uint256 upperBound = ringsProbabilitiesPerType[0];
+&nbsp;
+        for (uint256 i = 1; i &lt; ringsProbabilitiesPerType.length; i++) {
+            lowerBound = upperBound;
+            upperBound += ringsProbabilitiesPerType[i];
+            if (genNumber &gt; lowerBound &amp;&amp; genNumber &lt;= upperBound) {
+                ringType = i;
+                break;
+            }
+        }
+&nbsp;
+        return ringType;
+    }
+&nbsp;
+    /**
+     * @dev Returns the ring type of a token id.
+     * @param tokenId uint256 token id.
+     */
+    function getTokenIdRingType(
+        uint256 tokenId
+    ) external pure returns (uint256) {
+        return tokenId &amp; 255;
+    }
+&nbsp;
+    /**
+     * @dev Return the total number of minted rings.
+     * @return getTotalMintedRings uint256 Number of minted rings.
+     */
+    function getTotalMintedRings() external view returns (uint256) {
+        uint256 totalMintedRings;
+        totalMintedRings =
+            ringsMinted[0] +
+            ringsMinted[1] +
+            ringsMinted[2] +
+            ringsMinted[3] +
+            ringsMinted[4] +
+            ringsMinted[5] +
+            ringsMinted[6] +
+            ringsMinted[7];
+        return totalMintedRings;
+    }
+&nbsp;
+    /**
+     * @dev Return the total number of minted rings of each type.
+     * @return getTotalMintedRingsByType Array uint256 number of minted rings of each type.
+     */
+&nbsp;
+    function getTotalMintedRingsByType()
+        external
+        view
+        returns (uint256[] memory)
+    {
+        uint256[] memory ringsMintedByType = new uint256[](8);
+&nbsp;
+        ringsMintedByType[0] = ringsMinted[0];
+        ringsMintedByType[1] = ringsMinted[1];
+        ringsMintedByType[2] = ringsMinted[2];
+        ringsMintedByType[3] = ringsMinted[3];
+        ringsMintedByType[4] = ringsMinted[4];
+        ringsMintedByType[5] = ringsMinted[5];
+        ringsMintedByType[6] = ringsMinted[6];
+        ringsMintedByType[7] = ringsMinted[7];
+&nbsp;
+        return ringsMintedByType;
+    }
+&nbsp;
+    /**
+     * @dev Returns the number of rings left.
+     * @return getAvailableRings uint256 with rings available.
+     */
+    function getAvailableRings() external view returns (uint256) {
+        uint256 ringsLeft = ringsAvailable;
+&nbsp;
+        ringsLeft -= ringsMinted[0];
+        ringsLeft -= ringsMinted[1];
+        ringsLeft -= ringsMinted[2];
+        ringsLeft -= ringsMinted[3];
+        ringsLeft -= ringsMinted[4];
+        ringsLeft -= ringsMinted[5];
+        ringsLeft -= ringsMinted[6];
+        ringsLeft -= ringsMinted[7];
+&nbsp;
+        return ringsLeft;
+    }
+&nbsp;
+    /**
+     * @dev Returns the number of rings left of each type.
+     * @return ringsProbabilitiesPerType Array uint256 with rings probabilities per type.
+     */
+    function getProbabilities() external view returns (uint256[] memory) {
+        return ringsProbabilitiesPerType;
+    }
+&nbsp;
+    /**
+     * @dev Public method for public minting.
+     * @param numRings uint256 Number of rings to be minted.
+     */
+    function mint(uint256 numRings) external payable <span class="missing-if-branch" title="else path not taken" >E</span>nonReentrant {
+        privateMint(numRings);
+    }
+&nbsp;
+    /**
+     * @dev Private method for public minting.
+     * @param numRings uint256 Number of rings to be minted.
+     */
+    function privateMint(uint256 numRings) private {
+        if (!publicStarted()) {
+            revert WrongDateForProcess({
+                correct_date: publicMintStartTime,
+                current_date: block.timestamp
+            });
+        }
+        if (<span class="branch-0 cbranch-no" title="branch not covered" >numRings &lt;= 0</span> || numRings &gt; 20) {
+            revert IncorrectPurchaseLimit();
+        }
+        _mintTokensCheckingValue(numRings, msg.sender);
+    }
+&nbsp;
+    /**
+     * @dev Public method for free minting.
+     * @param numRings uint256 Number of rings to be minted.
+     */
+    function freeMint(uint256 numRings) private {
+        claimlistMinted[msg.sender] += numRings;
+        _mintTokens(numRings, msg.sender);
+    }
+&nbsp;
+    /**
+     * @dev Public method to mint with claim.
+     * @param payedMints uint256 Number of mints available.
+     * @param maxClaim uint256 Maximum number of rings that the address can mint.
+     * @param _merkleProof bytes32[] Merkle proof.
+     */
+    function mintWithClaim(
+        uint256 payedMints,
+        uint256 maxClaim,
+        bytes32[] calldata _merkleProof
+    ) external payable {
+        uint256 alreadyClaimed = claimlistMinted[msg.sender];
+&nbsp;
+        if (alreadyClaimed == 0 &amp;&amp; payedMints == 0) {
+            revert ClaimWithoutPurchase();
+        }
+&nbsp;
+        if (payedMints &gt; 0) {
+            privateMint(payedMints);
+        }
+&nbsp;
+        uint256 toClaim = maxClaim - alreadyClaimed;
+&nbsp;
+        if (alreadyClaimed == 0) {
+            freeMint(1);
+            toClaim--;
+        }
+&nbsp;
+        if (toClaim &gt; 0) {
+            claimlistMint(toClaim, maxClaim, _merkleProof);
+        }
+    }
+&nbsp;
+    /**
+     * @dev Public method to mint when the whitelist (mintlist) is active.
+     * @param numRings uint256 Number of rings to be minted.
+     * @param claimedMaxRings uint256 Maximum number of rings that the address mint.
+     * @param _merkleProof bytes32[] Merkle proof.
+     */
+    function mintlistMint(
+        uint256 numRings,
+        uint256 claimedMaxRings,
+        bytes32[] calldata _merkleProof
+    ) external payable <span class="missing-if-branch" title="else path not taken" >E</span>nonReentrant {
+        if (!mintlistStarted()) {
+            revert WrongDateForProcess({
+                correct_date: mintlistStartTime,
+                current_date: block.timestamp
+            });
+        }
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (numRings &lt;= 0 || numRings &gt; 20) {
+            revert IncorrectPurchaseLimit();
+        }
+        // verify allowlist
+        bytes32 _leaf = keccak256(
+            abi.encodePacked(msg.sender, ":", claimedMaxRings)
+        );
+&nbsp;
+        require(
+            MerkleProof.verify(_merkleProof, mintlistMerkleRoot1, _leaf) ||
+                MerkleProof.verify(_merkleProof, mintlistMerkleRoot2, _leaf),
+            "Invalid proof."
+        );
+&nbsp;
+        uint256 mintedPerAddress = mintlistMinted[msg.sender];
+&nbsp;
+        require(
+            mintedPerAddress + numRings &lt;= claimedMaxRings, // this is verified by the merkle proof
+            "Minting more than allowed."
+        );
+        mintlistMinted[msg.sender] += numRings;
+        _mintTokensCheckingValue(numRings, msg.sender);
+    }
+&nbsp;
+    /**
+     * @dev Public method to claim a ring, only when (claimlist) is active.
+     * @param numRings uint256 Number of rings to be minted.
+     * @param claimedMaxRings uint256 Maximum number of rings of ringType that the address mint.
+     * @param _merkleProof bytes32[] Merkle proof.
+     */
+    function claimlistMint(
+        uint256 numRings,
+        uint256 claimedMaxRings,
+        bytes32[] calldata _merkleProof
+    ) private <span class="missing-if-branch" title="else path not taken" >E</span>nonReentrant {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (!claimsStarted()) {
+            revert WrongDateForProcess({
+                correct_date: claimsStartTime,
+                current_date: block.timestamp
+            });
+        }
+&nbsp;
+        // verify allowlist
+        bytes32 _leaf = keccak256(
+            abi.encodePacked(msg.sender, ":", claimedMaxRings)
+        );
+&nbsp;
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            MerkleProof.verify(_merkleProof, claimlistMerkleRoot, _leaf),
+            "Invalid proof."
+        );
+&nbsp;
+        uint256 mintedPerAddress = claimlistMinted[msg.sender];
+&nbsp;
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            mintedPerAddress + numRings &lt;= claimedMaxRings, // this is verified by the merkle proof
+            "Claiming more than allowed."
+        );
+        claimlistMinted[msg.sender] += numRings;
+        _mintTokens(numRings, msg.sender);
+    }
+&nbsp;
+    /**
+     * @dev Checks if the amount sent is correct. Continue minting if it's correct.
+     * @param numRings uint256 Number of rings to be minted.
+     * @param recipient address Address that sent the mint.
+     */
+    function _mintTokensCheckingValue(
+        uint256 numRings,
+        address recipient
+    ) private {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (ringPrice &lt;= 0) {
+            revert MisconfiguredPrices();
+        }
+        require(
+            msg.value == ringPrice * numRings,
+            "Ether value sent is not accurate."
+        );
+        _mintTokens(numRings, recipient);
+    }
+&nbsp;
+    /**
+     * @dev Checks if there are rings available.
+     * Final step before sending it to WatchersRing contract.
+     * @param numRings uint256 Number of rings to be minted.
+     * @param recipient address Address that sent the mint.
+     */
+    function _mintTokens(uint256 numRings, address recipient) private {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            this.getTotalMintedRings() + numRings &lt;= this.getAvailableRings(),
+            "Trying to mint too many rings."
+        );
+&nbsp;
+        for (uint256 i = 0; i &lt; numRings; ++i) {
+            uint256 ringType = generateRing(); // Generate random ring type
+&nbsp;
+            // Cast uint256 to enum
+            IWatchersRing.WatchersRingType ringTypeCast = IWatchersRing
+                .WatchersRingType(ringType);
+&nbsp;
+            uint256 tokenId = ownerGetNextTokenId(ringTypeCast);
+            ++ringsMinted[uint256(ringType)];
+&nbsp;
+            watchersRing.mintTokenId(recipient, tokenId, ringTypeCast);
+        }
+    }
+&nbsp;
+    /**
+     * @dev Method to mint many ring and assign it to an addresses without
+     * any requirement. Used for private minting.
+     * @param ringTypes WatchersRingType[] enums with ring types.
+     * @param recipients address[] Addresses where the token will be transferred.
+     */
+    function ownerMint(
+        IWatchersRing.WatchersRingType[] calldata ringTypes,
+        address[] calldata recipients
+    ) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            ringTypes.length == recipients.length,
+            "Arrays should have the same size."
+        );
+        for (uint256 i = 0; i &lt; recipients.length; ++i) {
+            uint256 tokenId = ownerGetNextTokenId(ringTypes[i]);
+            ++ringsMinted[uint256(ringTypes[i])];
+&nbsp;
+            watchersRing.mintTokenId(recipients[i], tokenId, ringTypes[i]);
+        }
+    }
+&nbsp;
+    /**
+     * @dev Encodes the next token id.
+     * @param ringType WatchersRingType enum with ring type.
+     * @return ownerGetNextTokenId uint256 Encoded next tokenId.
+     */
+    function ownerGetNextTokenId(
+        IWatchersRing.WatchersRingType ringType
+    ) private view returns (uint256) {
+        uint256 globalCounter = ringsMinted[0] +
+            ringsMinted[1] +
+            ringsMinted[2] +
+            ringsMinted[3] +
+            ringsMinted[4] +
+            ringsMinted[5] +
+            ringsMinted[6] +
+            ringsMinted[7] +
+            ringGlobalOffset;
+        uint256 localCounter = ringsMinted[uint256(ringType)] +
+            ringTypeLocalOffset[uint256(ringType)];
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(localCounter &lt;= 4294967295, "Local index overflow.");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(uint256(ringType) &lt;= 255, "Ring index overflow.");
+&nbsp;
+        return (globalCounter &lt;&lt; 40) + (localCounter &lt;&lt; 8) + uint256(ringType);
+    }
+&nbsp;
+    /**
+     * Owner Controls
+     */
+    /**
+     * @dev Assigns a new public start minting time.
+     * @param _newPublicMintStartTime uint256 Echo time in seconds.
+     */
+    function setPublicMintStartTime(
+        uint256 _newPublicMintStartTime
+    ) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        publicMintStartTime = _newPublicMintStartTime;
+    }
+&nbsp;
+    /**
+     * @dev Assigns a new mintlist start minting time.
+     * @param _newAllowlistMintStartTime uint256 Echo time in seconds.
+     */
+    function setMintlistStartTime(
+        uint256 _newAllowlistMintStartTime
+    ) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        mintlistStartTime = _newAllowlistMintStartTime;
+    }
+&nbsp;
+    /**
+     * @dev Assigns a new claimlist start minting time.
+     * @param _newClaimsStartTime uint256 echo time in seconds.
+     */
+    function setClaimsStartTime(
+        uint256 _newClaimsStartTime
+    ) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        claimsStartTime = _newClaimsStartTime;
+    }
+&nbsp;
+    /**
+     * @dev Assigns a merkle root to the main tree for mintlist.
+     * @param newMerkleRoot bytes32 merkle root.
+     */
+    function setMintlistMerkleRoot1(bytes32 newMerkleRoot) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        mintlistMerkleRoot1 = newMerkleRoot;
+    }
+&nbsp;
+    /**
+     * @dev Assigns a merkle root to the second tree for mintlist. Used for double buffer.
+     * @param newMerkleRoot bytes32 merkle root.
+     */
+    function setMintlistMerkleRoot2(bytes32 newMerkleRoot) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        mintlistMerkleRoot2 = newMerkleRoot;
+    }
+&nbsp;
+    /**
+     * @dev Assigns a merkle root to the main tree for claimlist.
+     * @param newMerkleRoot bytes32 merkle root
+     */
+    function setClaimlistMerkleRoot(bytes32 newMerkleRoot) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        claimlistMerkleRoot = newMerkleRoot;
+    }
+&nbsp;
+    /**
+     * @dev Assigns the main contract.
+     * @param _newWatchersRingAddress IWatchersRing Main contract.
+     */
+    function setWatchersRing(
+        IWatchersRing _newWatchersRingAddress
+    ) public <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        watchersRing = _newWatchersRingAddress;
+    }
+&nbsp;
+    /**
+     * @dev Assigns the vault address.
+     * @param _newVaultAddress address vault address.
+     */
+    function setVaultAddress(
+        address payable _newVaultAddress
+    ) public <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        vault = _newVaultAddress;
+    }
+&nbsp;
+    /**
+     * @dev Assigns the offset to the global ids. This value will be added to
+     * the global id when a token is generated.
+     * @param _newGlobalIdOffset uint256 Offset.
+     */
+    function setGlobalIdOffset(uint256 _newGlobalIdOffset) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (mintlistStarted()) {
+            revert DeniedProcessDuringMinting();
+        }
+        ringGlobalOffset = _newGlobalIdOffset;
+    }
+&nbsp;
+    /**
+     * @dev Assigns the offset to the local ids. This value will be added to
+     * the local id of each ring type  when a token of some type is generated.
+     * @param _newRingTypeLocalOffset uint256[] Offsets.
+     */
+    function setLocalIdOffsets(
+        uint256[] calldata _newRingTypeLocalOffset
+    ) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (_newRingTypeLocalOffset.length != 8) {
+            revert GivenValuesNotValid({
+                sended_values: _newRingTypeLocalOffset.length,
+                expected: 8
+            });
+        }
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (mintlistStarted()) {
+            revert DeniedProcessDuringMinting();
+        }
+        ringTypeLocalOffset = _newRingTypeLocalOffset;
+    }
+&nbsp;
+    /**
+     * @dev Assigns the new rings quantities available.
+     * @param _newRingsAvailable uint256 Rings available.
+     */
+    function setRingsAvailable(uint256 _newRingsAvailable) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (mintlistStarted()) {
+            revert DeniedProcessDuringMinting();
+        }
+        ringsAvailable = _newRingsAvailable;
+    }
+&nbsp;
+    /**
+     * @dev Assigns the new ring prices for each ring type.
+     * @param _newPrice uint256 Rings prices.
+     */
+    function setPrice(uint256 _newPrice) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (mintlistStarted()) {
+            revert DeniedProcessDuringMinting();
+        }
+        ringPrice = _newPrice;
+    }
+&nbsp;
+    /**
+     * @dev Assigns the new ring probabilities for each ring type.
+     * @param _newProbabilities uint256[] Ring probabilities.
+     */
+    function setProbabilities(
+        uint256[] calldata _newProbabilities
+    ) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        uint256 totalProbabilities = 0;
+&nbsp;
+        for (uint256 i = 0; i &lt; _newProbabilities.length; i++) {
+            totalProbabilities += _newProbabilities[i];
+        }
+&nbsp;
+        if (totalProbabilities != 100) {
+            revert GivenValuesNotValid({
+                sended_values: totalProbabilities,
+                expected: 100
+            });
+        }
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (_newProbabilities.length != 8) {
+            revert GivenValuesNotValid({
+                sended_values: _newProbabilities.length,
+                expected: 8
+            });
+        }
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (mintlistStarted()) {
+            revert DeniedProcessDuringMinting();
+        }
+&nbsp;
+        ringsProbabilitiesPerType = _newProbabilities;
+    }
+&nbsp;
+    /**
+     * @notice Withdraw funds to the vault using sendValue.
+     * @param _amount uint256 The amount to withdraw.
+     */
+    function withdraw(uint256 _amount) external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        (bool success, ) = vault.call{value: _amount}("");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(success, "withdraw was not succesfull");
+    }
+&nbsp;
+    /**
+     * @notice Withdraw all the funds to the vault using sendValue
+     */
+    function withdrawAll() external <span class="missing-if-branch" title="else path not taken" >E</span>onlyOwner {
+        (bool success, ) = vault.call{value: address(this).balance}("");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(success, "withdraw all was not succesfull");
+    }
+&nbsp;
+    /**
+     * @notice Transfer amount to a token.
+     * @param _token IERC20 token to transfer.
+     * @param _amount uint256 Amount to transfer.
+     */
+<span class="fstat-no" title="function not covered" >    function forwardERC20s(IERC20 _token, uint256 _amount) external onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(msg.sender) == address(0)) {</span>
+            revert Address0Error();
+        }
+<span class="cstat-no" title="statement not covered" >        _token.transfer(msg.sender, _amount)</span>;
+    }
+&nbsp;
+    /// Wrong date for process, Come back on `correct_data` for complete this successfully.
+    /// @param correct_date date when the public/ mint is on.
+    /// @param current_date date when the process was executed.
+    error WrongDateForProcess(uint256 correct_date, uint256 current_date);
+&nbsp;
+    /// Denied Process During Minting.
+    error DeniedProcessDuringMinting();
+&nbsp;
+    /// Incorrect Purchase Limit, the limits are from 1 to 20 rings.
+    error IncorrectPurchaseLimit();
+&nbsp;
+    /// Incorrect Purchase Limit, the limits are from 1 to 20 rings.
+    error ClaimWithoutPurchase();
+&nbsp;
+    /// MisconfiguredPrices, the price of that ring type is not configured yet.
+    error MisconfiguredPrices();
+&nbsp;
+    /// Configured Prices Error, please send exactly 8 values.
+    /// @param sended_values Total given values.
+    /// @param expected Total needed values.
+    error GivenValuesNotValid(uint256 sended_values, uint256 expected);
+&nbsp;
+    error Address0Error();
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Oct 06 2023 13:21:39 GMT-0600 (Central Standard Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
