@@ -6,17 +6,17 @@ async function main() {
     console.log("Deploying contracts with the account:", deployer.address);
 
     // Deploy Funders Ring Contract
-    const FundersRingContract = await ethers.getContractFactory("FundersRing");
-    const fundersRingContract = await FundersRingContract.deploy("http://d9grnqbmunyb9.cloudfront.net/GetPlotId?PlotId=");
-    console.log('Funders Ring Contract Address:', fundersRingContract.address);
+    const WatchersRingContract = await ethers.getContractFactory("WatchersRing");
+    const watchersRingContract = await WatchersRingContract.deploy("http://d9grnqbmunyb9.cloudfront.net/GetRingId?RingId=");
+    console.log("Funders Ring Contract Address:", watchersRingContract.address);
 
     // Deploy Funders Ring Minter Contract
-    const FundersRingMinterContract = await ethers.getContractFactory("FundersRingMinter");
-    const fundersRingMinterContract = await FundersRingMinterContract.deploy(fundersRingContract.address);
-    console.log('Funders Ring Minter Address:', fundersRingMinterContract.address);
+    const WatchersRingMinterContract = await ethers.getContractFactory("WatchersRingMinter");
+    const watchersRingMinterContract = await WatchersRingMinterContract.deploy(watchersRingContract.address);
+    console.log("Watcher's Ring Minter Address:", watchersRingMinterContract.address);
 
     // Set primary minter
-    let tx = await fundersRingContract.setMinter(fundersRingMinterContract.address);
+    let tx = await watchersRingContract.setMinter(watchersRingMinterContract.address);
     console.log(tx);
     let re = await tx.wait();
     console.log(re);
