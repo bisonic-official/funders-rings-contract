@@ -231,8 +231,6 @@ describe("🔥 Start times test", function () {
         watchersRing.setMinter(watchersRingMinter.address);
 
         const ringPrice = ethers.utils.parseEther("0.01");
-        const ringsAvailable = ethers.BigNumber.from("10000");
-
         await watchersRingMinter.setPrice(ringPrice);
 
         // Public test
@@ -294,7 +292,6 @@ describe("🔥 Whitelist test", function () {
         watchersRing.setMinter(watchersRingMinter.address);
 
         const ringPrice = ethers.utils.parseEther("0.01");
-        const ringsAvailable = ethers.BigNumber.from("10000");
         const mintClaimStartTime = ethers.BigNumber.from("0");
         const mintListStartTime = ethers.BigNumber.from("0");
         const mintListFarTime = ethers.BigNumber.from("999999999999999");
@@ -344,7 +341,7 @@ describe("🔥 Whitelist test", function () {
     });
 });
 
-describe("🔥 Mint with claim test", function () {
+describe("🔥 Claim list test", function () {
     it("Claimlist should work", async function () {
         const [owner] = await ethers.getSigners();
 
@@ -356,64 +353,30 @@ describe("🔥 Mint with claim test", function () {
         watchersRing.setMinter(watchersRingMinter.address);
 
         const ringPrice = ethers.utils.parseEther("0.01");
-        const ringsAvailable = ethers.BigNumber.from("10000");
         const mintClaimStartTime = ethers.BigNumber.from("0");
         const mintListStartTime = ethers.BigNumber.from("0");
         const mintListFarTime = ethers.BigNumber.from("999999999999999");
         const mintStartTime = ethers.BigNumber.from("0");
 
         await watchersRingMinter.setPrice(ringPrice);
-        await watchersRingMinter.setRingsAvailable(ringsAvailable);
         await watchersRingMinter.setPublicMintStartTime(mintStartTime);
         await watchersRingMinter.setMintlistStartTime(mintListFarTime);
 
 
-        // Claim list has started
+        // Claim list has not started
+        await expect(watchersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWithCustomError(watchersRingMinter, "WrongDateForProcess");
         await watchersRingMinter.setClaimsStartTime(mintClaimStartTime);
-        await watchersRingMinter.setClaimsStartTime(mintListStartTime);
         await watchersRingMinter.setClaimlistMerkleRoot("0x1fbda4e7390960252c56ff025100919fcb353ee8ba83f9726c613ba2368c62c3");
 
-        // Test without claim
-        await expect(watchersRingMinter.mintWithClaim(0, 2, [
-            "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ], { value: ethers.utils.parseEther("0.00") })).to.be.revertedWithCustomError(watchersRingMinter, "ClaimWithoutPurchase");
-        expect(await watchersRingMinter.getTotalMintedRings()).to.be.equal(0);
+        // Mints with invalid proof
+        await expect(watchersRingMinter.claimlistMint(1, 2, ["0xaaaaa845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"])).to.be.revertedWith("Invalid proof.");
 
-        // Test free mints and mint with claim
-        await watchersRingMinter.mintWithClaim(2, 2, [
-            "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ], { value: ethers.utils.parseEther("0.02") });
-        expect(await watchersRingMinter.getTotalMintedRings()).to.be.equal(4);
+        // Mints with valid proof
+        await watchersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"]);
+        await watchersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"]);
 
-        await expect(watchersRingMinter.mintWithClaim(2, 3, [
-            "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Ether value sent is not accurate.");
-
-        // Reset claim list merkle root and try new claims
-        await watchersRingMinter.setClaimlistMerkleRoot("0xad37b8c27cd08865b8c30d7b54719f3309caa2c6d756ce1906cdc3fa0e5cb21a");
-        await watchersRingMinter.mintWithClaim(3, 2, [
-            "0xf59134dcea639b911f5899a7f065e3549bc9eedae7a0821a5d9a027050faad14"
-        ], { value: ethers.utils.parseEther("0.03") });
-        expect(await watchersRingMinter.getTotalMintedRings()).to.be.equal(7);
-
-        // Reset claim list merkle root and try new claims
-        await watchersRingMinter.setClaimlistMerkleRoot("0x2c0e66aa5e103a36c4e17aae24f2537872a416c02305d2c24fa0175c6d8f73a1");
-        await watchersRingMinter.mintWithClaim(10, 5, [
-            "0xf59134dcea639b911f5899a7f065e3549bc9eedae7a0821a5d9a027050faad14"
-        ], { value: ethers.utils.parseEther("0.10") });
-        expect(await watchersRingMinter.getTotalMintedRings()).to.be.equal(20);
-
-        await watchersRingMinter.mintWithClaim(10, 5, [
-            "0xf59134dcea639b911f5899a7f065e3549bc9eedae7a0821a5d9a027050faad14"
-        ], { value: ethers.utils.parseEther("0.10") });
-        expect(await watchersRingMinter.getTotalMintedRings()).to.be.equal(30);
-
-        // Reset claim list merkle root and try new claims
-        await watchersRingMinter.setClaimlistMerkleRoot("0xee77886d6fce31eba8f6eeee091cc374760601d21ee719061a4876d89b3185ce");
-        await watchersRingMinter.mintWithClaim(0, 15, [
-            "0xf59134dcea639b911f5899a7f065e3549bc9eedae7a0821a5d9a027050faad14"
-        ], { value: ethers.utils.parseEther("0.00") });
-        expect(await watchersRingMinter.getTotalMintedRings()).to.be.equal(40);
+        // Ran out of slots
+        await expect(watchersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"])).to.be.revertedWith("Claiming more than allowed.");
 
     });
 });

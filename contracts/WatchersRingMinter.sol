@@ -9,10 +9,9 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./IWatchersRing.sol";
-import "hardhat/console.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract WatchersRingMinter is Ownable, ReentrancyGuard {
     using Address for address payable;
@@ -138,13 +137,10 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
             keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))
         ) % 100) + 1;
 
-        uint256 lowerBound = 0;
-        uint256 upperBound = ringsProbabilitiesPerType[0];
-
-        for (uint256 i = 1; i < ringsProbabilitiesPerType.length; i++) {
-            lowerBound = upperBound;
+        uint256 upperBound = 0;
+        for (uint256 i = 0; i < ringsProbabilitiesPerType.length; i++) {
             upperBound += ringsProbabilitiesPerType[i];
-            if (genNumber > lowerBound && genNumber <= upperBound) {
+            if (genNumber <= upperBound) {
                 ringType = i;
                 break;
             }
@@ -185,7 +181,6 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
      * @dev Return the total number of minted rings of each type.
      * @return getTotalMintedRingsByType Array uint256 number of minted rings of each type.
      */
-
     function getTotalMintedRingsByType()
         external
         view
@@ -212,14 +207,14 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
     function getAvailableRings() external view returns (uint256) {
         uint256 ringsLeft = ringsAvailable;
 
-        ringsLeft -= ringsMinted[0];
-        ringsLeft -= ringsMinted[1];
-        ringsLeft -= ringsMinted[2];
-        ringsLeft -= ringsMinted[3];
-        ringsLeft -= ringsMinted[4];
-        ringsLeft -= ringsMinted[5];
-        ringsLeft -= ringsMinted[6];
-        ringsLeft -= ringsMinted[7];
+        ringsLeft -= (ringsMinted[0] +
+            ringsMinted[1] +
+            ringsMinted[2] +
+            ringsMinted[3] +
+            ringsMinted[4] +
+            ringsMinted[5] +
+            ringsMinted[6] +
+            ringsMinted[7]);
 
         return ringsLeft;
     }
@@ -255,48 +250,6 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
             revert IncorrectPurchaseLimit();
         }
         _mintTokensCheckingValue(numRings, msg.sender);
-    }
-
-    /**
-     * @dev Public method for free minting.
-     * @param numRings uint256 Number of rings to be minted.
-     */
-    function freeMint(uint256 numRings) private {
-        claimlistMinted[msg.sender] += numRings;
-        _mintTokens(numRings, msg.sender);
-    }
-
-    /**
-     * @dev Public method to mint with claim.
-     * @param payedMints uint256 Number of mints available.
-     * @param maxClaim uint256 Maximum number of rings that the address can mint.
-     * @param _merkleProof bytes32[] Merkle proof.
-     */
-    function mintWithClaim(
-        uint256 payedMints,
-        uint256 maxClaim,
-        bytes32[] calldata _merkleProof
-    ) external payable {
-        uint256 alreadyClaimed = claimlistMinted[msg.sender];
-
-        if (alreadyClaimed == 0 && payedMints == 0) {
-            revert ClaimWithoutPurchase();
-        }
-
-        if (payedMints > 0) {
-            privateMint(payedMints);
-        }
-
-        uint256 toClaim = maxClaim - alreadyClaimed;
-
-        if (alreadyClaimed == 0) {
-            freeMint(1);
-            toClaim--;
-        }
-
-        if (toClaim > 0) {
-            claimlistMint(toClaim, maxClaim, _merkleProof);
-        }
     }
 
     /**
@@ -350,7 +303,7 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
         uint256 numRings,
         uint256 claimedMaxRings,
         bytes32[] calldata _merkleProof
-    ) private nonReentrant {
+    ) external payable nonReentrant {
         if (!claimsStarted()) {
             revert WrongDateForProcess({
                 correct_date: claimsStartTime,
