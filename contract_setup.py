@@ -44,21 +44,21 @@ def main():
         print(f'[INFO] Vault address: {vault_address}')
 
         # Get rings available to mint
-        rings_available = contract.functions.ringsAvailable().call()
+        rings_available = contract.functions.getAvailableRings().call()
         print(f'[INFO] Rings available: {rings_available}')
 
         # Verify the ring price before setup
-        ring_price = contract.functions.ringPrice().call()
+        ring_price = contract.functions.getRingPrice().call()
         print(f'[INFO] Ring price: {ring_price}')
 
         # Set the ring price
         ring_price = 1_000_000_000_000_000
         txn_receipt = set_ring_price(w3, contract, private_key, address,
                                      ring_price)
-        txn_msg = f'Transaction receipt (setRingPrice): {txn_receipt}'
+        txn_msg = f'Transaction receipt (setPrice): {txn_receipt}'
 
         # Verify the ring price after setup
-        ring_price = contract.functions.ringPrice().call()
+        ring_price = contract.functions.getRingPrice().call()
         print(f'[INFO] Ring price: {ring_price}')
 
 
