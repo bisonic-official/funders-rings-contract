@@ -236,7 +236,7 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
      * @return addressesWhoMinted Array address with list of addresses that have minted a ring already.
      */
     function getAddressesWhoMinted()
-        external
+        public
         view
         onlyOwner
         returns (address[] memory)
@@ -250,7 +250,7 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
      */
     function addressAlreadyMinted(
         address _address
-    ) private view returns (bool) {
+    ) external view returns (bool) {
         bool addressMinted = false;
 
         for (uint256 i = 0; i < addressesWhoMinted.length; i++) {
@@ -399,7 +399,7 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
 
         for (uint256 i = 0; i < numRings; ++i) {
             require(
-                addressAlreadyMinted(recipient) == false,
+                this.addressAlreadyMinted(recipient) == false,
                 "Address alredy minted a ring."
             );
 
@@ -433,7 +433,7 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
         );
         for (uint256 i = 0; i < recipients.length; ++i) {
             require(
-                addressAlreadyMinted(recipients[i]) == false,
+                this.addressAlreadyMinted(recipients[i]) == false,
                 "Address alredy minted a ring."
             );
 
