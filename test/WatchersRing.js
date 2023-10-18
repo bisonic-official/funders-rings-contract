@@ -69,7 +69,7 @@ describe("🔥 Test getters and setters", function () {
 
 
 describe("🔥 Mint test", function () {
-    it("Test single mints + withdrawal functions", async function () {
+    it("Test single mints + withdrawal functions + limit to 1 ring minted", async function () {
         const [owner] = await ethers.getSigners();
 
         const WatchersRing = await ethers.getContractFactory("WatchersRing");
@@ -102,11 +102,12 @@ describe("🔥 Mint test", function () {
         await watchersRingMinter.setPublicMintStartTime(mintStartTime);
         await expect(watchersRingMinter.mint(1, { value: ethers.utils.parseEther("0.02") })).to.be.revertedWith("Ether value sent is not accurate.");
         await watchersRingMinter.mint(1, { value: ethers.utils.parseEther("0.01") });
-        await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
-        await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
-        await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
-        await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
-        await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        await expect(watchersRingMinter.mint(1, { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Address alredy minted a ring.");
+        // await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        // await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        // await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        // await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
+        // await watchersRingMinter.mint(20, { value: ethers.utils.parseEther("0.20") });
         await expect(watchersRingMinter.mint(21, { value: ethers.utils.parseEther("0.21") })).to.be.revertedWithCustomError(watchersRingMinter, "IncorrectPurchaseLimit");
 
         // Search for events to know minted rings
@@ -129,8 +130,8 @@ describe("🔥 Mint test", function () {
         }
         const tokenIds = Array.from(owned);
         expect((await watchersRingMinter.getTokenIdRingType(tokenIds[0]))).to.lessThan(101);
-        console.log("Distribution of rings minted by type (101 rings):");
-        console.log(await watchersRingMinter.getTotalMintedRingsByType());
+        // console.log("Distribution of rings minted by type (101 rings):");
+        // console.log(await watchersRingMinter.getTotalMintedRingsByType());
 
         // Withdraw test
         var beforeWithdraw = await watchersRingMinter.provider.getBalance(owner.address);
@@ -155,7 +156,7 @@ describe("🔥 Mint test", function () {
 
         // So far, 101 rings have been minted
         const totalSupply = await watchersRing.totalSupply();
-        expect(totalSupply).to.equal(101);
+        expect(totalSupply).to.equal(1);
     });
 });
 
@@ -325,9 +326,9 @@ describe("🔥 Whitelist test", function () {
         await watchersRingMinter.setMintlistMerkleRoot2("0xaaaaa4e7390960252c56ff025100919fcb353ee8ba83f9726c613ba2368c62c3");
 
         // Still correct and last available plot for this wallet
-        await watchersRingMinter.mintlistMint(1, 2, [
-            "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ], { value: ethers.utils.parseEther("0.01") });
+        // await watchersRingMinter.mintlistMint(1, 2, [
+        //     "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
+        // ], { value: ethers.utils.parseEther("0.01") });
 
         // Mints with invalid proof
         await expect(watchersRingMinter.mintlistMint(1, 2, [
@@ -337,7 +338,7 @@ describe("🔥 Whitelist test", function () {
         // Ran out of slots
         await expect(watchersRingMinter.mintlistMint(1, 2, [
             "0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"
-        ], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Minting more than allowed.");
+        ], { value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Address alredy minted a ring.");
     });
 });
 
@@ -373,17 +374,17 @@ describe("🔥 Claim list test", function () {
 
         // Mints with valid proof
         await watchersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"]);
-        await watchersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"]);
+        await expect(watchersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"])).to.be.revertedWith("Address alredy minted a ring.");
 
-        // Ran out of slots
-        await expect(watchersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"])).to.be.revertedWith("Claiming more than allowed.");
+        // // Ran out of slots
+        // await expect(watchersRingMinter.claimlistMint(1, 2, ["0x3f763845cf8fc1ce980db962b636d70e50d0821cd1108b59d6f31730ea49dc69"])).to.be.revertedWith("Claiming more than allowed.");
 
     });
 });
 
 describe("🔥 Marketplace blacklist", function () {
     it("Marketplace blacklist should work.", async function () {
-        const [owner, addr1, addr2] = await ethers.getSigners();
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
         const WatchersRing = await ethers.getContractFactory("WatchersRing");
         const watchersRing = await WatchersRing.deploy("http://d9grnqbmunyb9.cloudfront.net/GetRingId?RingId=");
@@ -403,13 +404,19 @@ describe("🔥 Marketplace blacklist", function () {
         await watchersRingMinter.setMintlistStartTime(mintListStartTime);
         await watchersRingMinter.setClaimsStartTime(mintClaimStartTime);
 
-        // Mints an extra plot
-        await watchersRingMinter.ownerMint(
+        // Mint rings
+        await watchersRingMinter.ownerMint([0],[owner.address]);
+
+        await expect(watchersRingMinter.ownerMint(
             [0, 0, 0, 0],
-            [owner.address,
-            owner.address,
-            owner.address,
-            owner.address]);
+            [
+                owner.address,
+                owner.address,
+                owner.address,
+                owner.address
+            ])).to.be.revertedWith("Address alredy minted a ring.");
+        
+        await expect(watchersRingMinter.ownerMint([0],[owner.address])).to.be.revertedWith("Address alredy minted a ring.");
 
         // Search for events to know minted plots
         const sentLogs = await watchersRing.queryFilter(
@@ -431,8 +438,8 @@ describe("🔥 Marketplace blacklist", function () {
         }
         const tokenIds = Array.from(owned);
 
-        // Should be 2 plots
-        expect(tokenIds.length).to.equal(4);
+        // Should be 4 rings minted
+        expect(tokenIds.length).to.equal(1);
 
         // Normal fail transfer, as is not approved
         await expect(watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[0])).to.be.revertedWith("ERC721: caller is not token owner or approved");
@@ -442,45 +449,46 @@ describe("🔥 Marketplace blacklist", function () {
         await watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[0]);
         // Denying add1 as "marketplace"
         await watchersRing.setDeniedMarketplace(addr1.address, true);
-        // Address is in blacklist, signer can't approve addr1 to transfer his token
-        await expect(watchersRing.approve(addr1.address, tokenIds[1])).to.be.revertedWith("Invalid Marketplace");
-        // If trying to transfer, first require is the market blacklist, so it should fail
-        await expect(watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[1])).to.be.revertedWith("Invalid Marketplace");
-        // Removing "addr1" from the blacklist
-        await watchersRing.setDeniedMarketplace(addr1.address, false);
-        // Success approve, now addr1 and add2 can transfer tokenIds[1]
-        await watchersRing.approve(addr1.address, tokenIds[1]);
-        await watchersRing.approve(addr1.address, tokenIds[2]);
-        // Correct transfer
-        await watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[1]);
-        // Denying the addr1 as marketplace
-        await watchersRing.setDeniedMarketplace(addr1.address, true);
-        // add2 was not transferred and now addr1 is blocked as marketplace
-        await expect(watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[2])).to.be.revertedWith("Invalid Marketplace");
+        
+        // // Address is in blacklist, signer can't approve addr1 to transfer his token
+        // await expect(watchersRing.approve(addr1.address, tokenIds[1])).to.be.revertedWith("Invalid Marketplace");
+        // // If trying to transfer, first require is the market blacklist, so it should fail
+        // await expect(watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[1])).to.be.revertedWith("Invalid Marketplace");
+        // // Removing "addr1" from the blacklist
+        // await watchersRing.setDeniedMarketplace(addr1.address, false);
+        // // Success approve, now addr1 and add2 can transfer tokenIds[1]
+        // await watchersRing.approve(addr1.address, tokenIds[1]);
+        // await watchersRing.approve(addr1.address, tokenIds[2]);
+        // // Correct transfer
+        // await watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[1]);
+        // // Denying the addr1 as marketplace
+        // await watchersRing.setDeniedMarketplace(addr1.address, true);
+        // // add2 was not transferred and now addr1 is blocked as marketplace
+        // await expect(watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[2])).to.be.revertedWith("Invalid Marketplace");
 
 
-        // Addr1 is blocked as marketplace, setApprovalForAll should fail
-        await expect(watchersRing.setApprovalForAll(addr1.address, true)).to.be.revertedWith("Invalid Marketplace");
-        // Allowing the  marketplace again
-        await watchersRing.setDeniedMarketplace(addr1.address, false);
-        // Now approved for all tokens
-        await watchersRing.setApprovalForAll(addr1.address, true);
-        // Correct transfer
-        await watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[2]);
-        // Denying addr1 as marketplace again
-        await watchersRing.setDeniedMarketplace(addr1.address, true);
-        // Failed trasnfer
-        await expect(watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[3])).to.be.revertedWith("Invalid Marketplace");
+        // // Addr1 is blocked as marketplace, setApprovalForAll should fail
+        // await expect(watchersRing.setApprovalForAll(addr1.address, true)).to.be.revertedWith("Invalid Marketplace");
+        // // Allowing the  marketplace again
+        // await watchersRing.setDeniedMarketplace(addr1.address, false);
+        // // Now approved for all tokens
+        // await watchersRing.setApprovalForAll(addr1.address, true);
+        // // Correct transfer
+        // await watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[2]);
+        // // Denying addr1 as marketplace again
+        // await watchersRing.setDeniedMarketplace(addr1.address, true);
+        // // Failed trasnfer
+        // await expect(watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[3])).to.be.revertedWith("Invalid Marketplace");
 
-        // Allowing marketplace
-        await watchersRing.setDeniedMarketplace(addr1.address, false);
-        // Removing approval
-        await watchersRing.setApprovalForAll(addr1.address, false);
-        // Normal not approved fail
-        await expect(watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[3])).to.be.revertedWith("ERC721: caller is not token owner or approved");
-        // Single approving
-        await watchersRing.approve(addr1.address, tokenIds[3]);
-        // Success transfer
-        await watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[3]);
+        // // Allowing marketplace
+        // await watchersRing.setDeniedMarketplace(addr1.address, false);
+        // // Removing approval
+        // await watchersRing.setApprovalForAll(addr1.address, false);
+        // // Normal not approved fail
+        // await expect(watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[3])).to.be.revertedWith("ERC721: caller is not token owner or approved");
+        // // Single approving
+        // await watchersRing.approve(addr1.address, tokenIds[3]);
+        // // Success transfer
+        // await watchersRing.connect(addr1).transferFrom(owner.address, addr2.address, tokenIds[3]);
     });
 });

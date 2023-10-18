@@ -76,6 +76,10 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
     /// @notice Stores the number minted by this address in the claimslist.
     mapping(address => uint256) public claimlistMinted;
 
+    /// @notice Stores the list of addresses that have minted a ring already.
+    /// @notice This is used to limit the minting limit.
+    address[] private addressesWhoMinted;
+
     /**
      * @dev Create the contract and set the initial baseURI.
      * @param _watchersRing Address the initial base URI for the token metadata URL.
@@ -228,6 +232,37 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @dev Returns the list with addresses that have minted a ring already.
+     * @return addressesWhoMinted Array address with list of addresses that have minted a ring already.
+     */
+    function getAddressesWhoMinted()
+        external
+        view
+        onlyOwner
+        returns (address[] memory)
+    {
+        return addressesWhoMinted;
+    }
+
+    /**
+     * @dev Returns if an address has minted a ring already.
+     * @return addressMinted Bool if address has minted a ring.
+     */
+    function addressAlreadyMinted(
+        address _address
+    ) private view returns (bool) {
+        bool addressMinted = false;
+
+        for (uint256 i = 0; i < addressesWhoMinted.length; i++) {
+            if (_address == addressesWhoMinted[i]) {
+                addressMinted = true;
+                break;
+            }
+        }
+        return addressMinted;
+    }
+
+    /**
      * @dev Public method for public minting.
      * @param numRings uint256 Number of rings to be minted.
      */
@@ -363,6 +398,11 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
         );
 
         for (uint256 i = 0; i < numRings; ++i) {
+            require(
+                addressAlreadyMinted(recipient) == false,
+                "Address alredy minted a ring."
+            );
+
             uint256 ringType = generateRing(); // Generate random ring type
 
             // Cast uint256 to enum
@@ -373,6 +413,7 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
             ++ringsMinted[uint256(ringType)];
 
             watchersRing.mintTokenId(recipient, tokenId, ringTypeCast);
+            addressesWhoMinted.push(recipient);
         }
     }
 
@@ -391,10 +432,16 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
             "Arrays should have the same size."
         );
         for (uint256 i = 0; i < recipients.length; ++i) {
+            require(
+                addressAlreadyMinted(recipients[i]) == false,
+                "Address alredy minted a ring."
+            );
+
             uint256 tokenId = ownerGetNextTokenId(ringTypes[i]);
             ++ringsMinted[uint256(ringTypes[i])];
 
             watchersRing.mintTokenId(recipients[i], tokenId, ringTypes[i]);
+            addressesWhoMinted.push(recipients[i]);
         }
     }
 
