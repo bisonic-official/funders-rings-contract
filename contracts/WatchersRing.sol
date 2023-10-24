@@ -83,6 +83,15 @@ contract WatchersRing is ERC721, Ownable, ReentrancyGuard, IWatchersRing {
     }
 
     /**
+     *
+     * @dev Returns the base URL of the token metadata.
+     * @return string the base URL of the token metadata.
+     */
+    function getTokenURI() public view returns (string memory) {
+        return baseTokenURI;
+    }
+
+    /**
      * @dev Returns if the token exists.
      * @param tokenId uint256 with the ID of the token.
      * @return exists bool if it exists.

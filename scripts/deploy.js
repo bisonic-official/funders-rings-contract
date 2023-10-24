@@ -7,7 +7,7 @@ async function main() {
 
     // Deploy Funders Ring Contract
     const WatchersRingContract = await ethers.getContractFactory("WatchersRing");
-    const watchersRingContract = await WatchersRingContract.deploy("http://18.208.114.170:9080/GetRingInfo?RingId=");
+    const watchersRingContract = await WatchersRingContract.deploy("https://api.runiverse.world/GetRingInfo?RingId=");
     console.log("Watcher's Ring Contract Address:", watchersRingContract.address);
 
     // Deploy Funders Ring Minter Contract

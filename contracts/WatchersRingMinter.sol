@@ -78,7 +78,7 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
 
     /// @notice Stores the list of addresses that have minted a ring already.
     /// @notice This is used to limit the minting limit.
-    address[] private addressesWhoMinted;
+    mapping(address => uint256) private addressesWhoMinted;
 
     /**
      * @dev Create the contract and set the initial baseURI.
@@ -232,19 +232,6 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Returns the list with addresses that have minted a ring already.
-     * @return addressesWhoMinted Array address with list of addresses that have minted a ring already.
-     */
-    function getAddressesWhoMinted()
-        public
-        view
-        onlyOwner
-        returns (address[] memory)
-    {
-        return addressesWhoMinted;
-    }
-
-    /**
      * @dev Returns if an address has minted a ring already.
      * @return addressMinted Bool if address has minted a ring.
      */
@@ -253,48 +240,39 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
     ) external view returns (bool) {
         bool addressMinted = false;
 
-        for (uint256 i = 0; i < addressesWhoMinted.length; i++) {
-            if (_address == addressesWhoMinted[i]) {
-                addressMinted = true;
-                break;
-            }
+        if (addressesWhoMinted[_address] != 0) {
+            addressMinted = true;
         }
+
         return addressMinted;
     }
 
     /**
      * @dev Public method for public minting.
-     * @param numRings uint256 Number of rings to be minted.
      */
-    function mint(uint256 numRings) external payable nonReentrant {
-        privateMint(numRings);
+    function mint() external payable nonReentrant {
+        privateMint();
     }
 
     /**
      * @dev Private method for public minting.
-     * @param numRings uint256 Number of rings to be minted.
      */
-    function privateMint(uint256 numRings) private {
+    function privateMint() private {
         if (!publicStarted()) {
             revert WrongDateForProcess({
                 correct_date: publicMintStartTime,
                 current_date: block.timestamp
             });
         }
-        if (numRings <= 0 || numRings > 20) {
-            revert IncorrectPurchaseLimit();
-        }
-        _mintTokensCheckingValue(numRings, msg.sender);
+        _mintTokenCheckingValue(msg.sender);
     }
 
     /**
      * @dev Public method to mint when the whitelist (mintlist) is active.
-     * @param numRings uint256 Number of rings to be minted.
      * @param claimedMaxRings uint256 Maximum number of rings that the address mint.
      * @param _merkleProof bytes32[] Merkle proof.
      */
     function mintlistMint(
-        uint256 numRings,
         uint256 claimedMaxRings,
         bytes32[] calldata _merkleProof
     ) external payable nonReentrant {
@@ -303,9 +281,6 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
                 correct_date: mintlistStartTime,
                 current_date: block.timestamp
             });
-        }
-        if (numRings <= 0 || numRings > 20) {
-            revert IncorrectPurchaseLimit();
         }
         // verify allowlist
         bytes32 _leaf = keccak256(
@@ -321,21 +296,19 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
         uint256 mintedPerAddress = mintlistMinted[msg.sender];
 
         require(
-            mintedPerAddress + numRings <= claimedMaxRings, // this is verified by the merkle proof
+            mintedPerAddress + 1 <= claimedMaxRings, // this is verified by the merkle proof
             "Minting more than allowed."
         );
-        mintlistMinted[msg.sender] += numRings;
-        _mintTokensCheckingValue(numRings, msg.sender);
+        mintlistMinted[msg.sender] += 1;
+        _mintTokenCheckingValue(msg.sender);
     }
 
     /**
      * @dev Public method to claim a ring, only when (claimlist) is active.
-     * @param numRings uint256 Number of rings to be minted.
      * @param claimedMaxRings uint256 Maximum number of rings of ringType that the address mint.
      * @param _merkleProof bytes32[] Merkle proof.
      */
     function claimlistMint(
-        uint256 numRings,
         uint256 claimedMaxRings,
         bytes32[] calldata _merkleProof
     ) external payable nonReentrant {
@@ -359,62 +332,52 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
         uint256 mintedPerAddress = claimlistMinted[msg.sender];
 
         require(
-            mintedPerAddress + numRings <= claimedMaxRings, // this is verified by the merkle proof
+            mintedPerAddress + 1 <= claimedMaxRings, // this is verified by the merkle proof
             "Claiming more than allowed."
         );
-        claimlistMinted[msg.sender] += numRings;
-        _mintTokens(numRings, msg.sender);
+        claimlistMinted[msg.sender] += 1;
+        _mintToken(msg.sender);
     }
 
     /**
      * @dev Checks if the amount sent is correct. Continue minting if it's correct.
-     * @param numRings uint256 Number of rings to be minted.
      * @param recipient address Address that sent the mint.
      */
-    function _mintTokensCheckingValue(
-        uint256 numRings,
-        address recipient
-    ) private {
+    function _mintTokenCheckingValue(address recipient) private {
         if (ringPrice <= 0) {
             revert MisconfiguredPrices();
         }
-        require(
-            msg.value == ringPrice * numRings,
-            "Ether value sent is not accurate."
-        );
-        _mintTokens(numRings, recipient);
+        require(msg.value == ringPrice, "Ether value sent is not accurate.");
+        _mintToken(recipient);
     }
 
     /**
      * @dev Checks if there are rings available.
      * Final step before sending it to WatchersRing contract.
-     * @param numRings uint256 Number of rings to be minted.
      * @param recipient address Address that sent the mint.
      */
-    function _mintTokens(uint256 numRings, address recipient) private {
+    function _mintToken(address recipient) private {
         require(
-            this.getTotalMintedRings() + numRings <= this.getAvailableRings(),
+            this.getTotalMintedRings() <= this.getAvailableRings(),
             "Trying to mint too many rings."
         );
 
-        for (uint256 i = 0; i < numRings; ++i) {
-            require(
-                this.addressAlreadyMinted(recipient) == false,
-                "Address alredy minted a ring."
-            );
+        require(
+            this.addressAlreadyMinted(recipient) == false,
+            "Address alredy minted a ring."
+        );
 
-            uint256 ringType = generateRing(); // Generate random ring type
+        uint256 ringType = generateRing(); // Generate random ring type
 
-            // Cast uint256 to enum
-            IWatchersRing.WatchersRingType ringTypeCast = IWatchersRing
-                .WatchersRingType(ringType);
+        // Cast uint256 to enum
+        IWatchersRing.WatchersRingType ringTypeCast = IWatchersRing
+            .WatchersRingType(ringType);
 
-            uint256 tokenId = ownerGetNextTokenId(ringTypeCast);
-            ++ringsMinted[uint256(ringType)];
+        uint256 tokenId = ownerGetNextTokenId(ringTypeCast);
+        ++ringsMinted[uint256(ringType)];
 
-            watchersRing.mintTokenId(recipient, tokenId, ringTypeCast);
-            addressesWhoMinted.push(recipient);
-        }
+        watchersRing.mintTokenId(recipient, tokenId, ringTypeCast);
+        addressesWhoMinted[recipient] = tokenId;
     }
 
     /**
@@ -432,16 +395,15 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
             "Arrays should have the same size."
         );
         for (uint256 i = 0; i < recipients.length; ++i) {
-            require(
-                this.addressAlreadyMinted(recipients[i]) == false,
-                "Address alredy minted a ring."
-            );
+            if (this.addressAlreadyMinted(recipients[i]) == true) {
+                revert AlreadyMintedOneRing();
+            }
 
             uint256 tokenId = ownerGetNextTokenId(ringTypes[i]);
             ++ringsMinted[uint256(ringTypes[i])];
 
             watchersRing.mintTokenId(recipients[i], tokenId, ringTypes[i]);
-            addressesWhoMinted.push(recipients[i]);
+            addressesWhoMinted[recipients[i]] = tokenId;
         }
     }
 
@@ -672,11 +634,8 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
     /// Denied Process During Minting.
     error DeniedProcessDuringMinting();
 
-    /// Incorrect Purchase Limit, the limits are from 1 to 20 rings.
-    error IncorrectPurchaseLimit();
-
-    /// Incorrect Purchase Limit, the limits are from 1 to 20 rings.
-    error ClaimWithoutPurchase();
+    /// The address already minted a ring.
+    error AlreadyMintedOneRing();
 
     /// MisconfiguredPrices, the price of that ring type is not configured yet.
     error MisconfiguredPrices();
