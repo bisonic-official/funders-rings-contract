@@ -112,9 +112,9 @@ describe("🔥 Mint test", function () {
         watchersRing.setMinter(watchersRingMinter.address);
 
         // Set available rings
-        await watchersRingMinter.setRingsAvailable(200);
+        await watchersRingMinter.setRingsAvailable(300);
         const availableRings = await watchersRingMinter.getInitialRings();
-        expect(availableRings).to.deep.equal(200);
+        expect(availableRings).to.deep.equal(300);
 
         const ringPrice = ethers.utils.parseEther("0.01");
         const mintClaimStartTime = ethers.BigNumber.from("0");
