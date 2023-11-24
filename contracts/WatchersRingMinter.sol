@@ -358,7 +358,7 @@ contract WatchersRingMinter is Ownable, ReentrancyGuard {
      */
     function _mintToken(address recipient) private {
         require(
-            this.getTotalMintedRings() < this.getAvailableRings(),
+            this.getTotalMintedRings() < this.getInitialRings(),
             "Trying to mint too many rings."
         );
 

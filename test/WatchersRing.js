@@ -79,8 +79,9 @@ describe("🔥 Mint test", function () {
         // Create 99 wallets for testing
         let addressArray = [];
         let signers = [];
+        let n_wallets = 699;
 
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < n_wallets; i++) {
             // Create a new wallet
             let wallet = ethers.Wallet.createRandom().connect(ethers.provider);
             
@@ -112,9 +113,9 @@ describe("🔥 Mint test", function () {
         watchersRing.setMinter(watchersRingMinter.address);
 
         // Set available rings
-        await watchersRingMinter.setRingsAvailable(300);
+        await watchersRingMinter.setRingsAvailable(700);
         const availableRings = await watchersRingMinter.getInitialRings();
-        expect(availableRings).to.deep.equal(300);
+        expect(availableRings).to.deep.equal(700);
 
         const ringPrice = ethers.utils.parseEther("0.01");
         const mintClaimStartTime = ethers.BigNumber.from("0");
@@ -137,7 +138,7 @@ describe("🔥 Mint test", function () {
         await expect(watchersRingMinter.mint({ value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("Address alredy minted a ring.");
         
         // Test minting other 99 rings
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < n_wallets; i++) {
             await watchersRingMinter.connect(signers[i]).mint({ value: ethers.utils.parseEther("0.01") });
         }
 
@@ -187,7 +188,7 @@ describe("🔥 Mint test", function () {
 
         // So far, 101 rings have been minted
         const totalSupply = await watchersRing.totalSupply();
-        expect(totalSupply).to.equal(101);
+        expect(totalSupply).to.equal(n_wallets + 1);
     });
 });
 

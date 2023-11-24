@@ -37,16 +37,20 @@ def main():
         contract_balance = w3.eth.get_balance(contract.address)
         print(f'[INFO] Contract balance: {contract_balance}')
 
+        # # Get vault address
+        # vault = contract.functions.vault().call()
+        # print(f'[INFO] Vault: {vault}')
+
         # Withdraw ETH
         txn_receipt = withdraw_eth(w3, contract, private_key, address,
                                    1000000000000000)
         txn_msg = f'Transaction receipt (withdraw): {txn_receipt}'
         print(f'[INFO] {txn_msg}')
 
-        # Withdraw all ETH
-        txn_receipt = withdraw_all_eth(w3, contract, private_key, address)
-        txn_msg = f'Transaction receipt (withdrawAll): {txn_receipt}'
-        print(f'[INFO] {txn_msg}')
+        # # Withdraw all ETH
+        # txn_receipt = withdraw_all_eth(w3, contract, private_key, address)
+        # txn_msg = f'Transaction receipt (withdrawAll): {txn_receipt}'
+        # print(f'[INFO] {txn_msg}')
 
         # Get crypto balance after withdraw
         eth_balance = w3.eth.get_balance(address)

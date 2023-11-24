@@ -2,7 +2,7 @@ from utils.config import load_config
 from utils.config import setup_custom_logger
 from utils.contract import connect_to_web3
 from utils.contract import load_contract
-from utils.transact import mint_rings
+from utils.transact import mint_ring
 
 
 def main():
@@ -40,8 +40,7 @@ def main():
         print(f'[INFO] Ring price: {ring_price}')
 
         # Mint a ring
-        txn_receipt = mint_rings(w3, contract, private_key, address, 1,
-                                 ring_price)
+        txn_receipt = mint_ring(w3, contract, private_key, address, ring_price)
         print(f'[INFO] Transaction receipt: {txn_receipt}')
 
         # Get rings available after mint

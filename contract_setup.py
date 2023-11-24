@@ -32,16 +32,16 @@ def main():
         vault_address = contract.functions.vault().call()
         print(f'[INFO] Vault address: {vault_address}')
 
-        # Set the vault address
-        vault_address = config['account']['address']
-        txn_receipt = set_vault_address(w3, contract, private_key, address,
-                                        vault_address)
-        txn_msg = f'Transaction receipt (setVaultAddress): {txn_receipt}'
-        print(f'[INFO] {txn_msg}')
+        # # Set the vault address
+        # vault_address = config['account']['address']
+        # txn_receipt = set_vault_address(w3, contract, private_key, address,
+        #                                 vault_address)
+        # txn_msg = f'Transaction receipt (setVaultAddress): {txn_receipt}'
+        # print(f'[INFO] {txn_msg}')
 
-        # Get vault address after setup
-        vault_address = contract.functions.vault().call()
-        print(f'[INFO] Vault address: {vault_address}')
+        # # Get vault address after setup
+        # vault_address = contract.functions.vault().call()
+        # print(f'[INFO] Vault address: {vault_address}')
 
         # Get rings available to mint
         rings_available = contract.functions.getAvailableRings().call()
@@ -51,15 +51,16 @@ def main():
         ring_price = contract.functions.getRingPrice().call()
         print(f'[INFO] Ring price: {ring_price}')
 
-        # Set the ring price
-        ring_price = 1_000_000_000_000_000
-        txn_receipt = set_ring_price(w3, contract, private_key, address,
-                                     ring_price)
-        txn_msg = f'Transaction receipt (setPrice): {txn_receipt}'
+        # # Set the ring price
+        # ring_price = 1_000_000_000_000_000
+        # txn_receipt = set_ring_price(w3, contract, private_key, address,
+        #                              ring_price)
+        # txn_msg = f'Transaction receipt (setPrice): {txn_receipt}'
+        # print(f'[INFO] {txn_msg}')
 
-        # Verify the ring price after setup
-        ring_price = contract.functions.getRingPrice().call()
-        print(f'[INFO] Ring price: {ring_price}')
+        # # Verify the ring price after setup
+        # ring_price = contract.functions.getRingPrice().call()
+        # print(f'[INFO] Ring price: {ring_price}')
 
 
 if __name__ == '__main__':
