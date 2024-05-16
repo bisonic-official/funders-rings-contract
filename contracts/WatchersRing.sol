@@ -5,13 +5,21 @@
 pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IWatchersRing.sol";
 
 // This is the main building block for smart contracts.
-contract WatchersRing is ERC721, Ownable, ReentrancyGuard, IWatchersRing {
+contract WatchersRing is
+    ERC721,
+    ERC721Enumerable,
+    Ownable,
+    ReentrancyGuard,
+    IWatchersRing
+{
     using Strings for uint256;
 
     /// @notice Maximum supply of total rings.
@@ -41,6 +49,47 @@ contract WatchersRing is ERC721, Ownable, ReentrancyGuard, IWatchersRing {
      */
     constructor(string memory baseURI) ERC721("WatchersRing", "WR") {
         baseTokenURI = baseURI;
+    }
+
+    /**
+     * @dev Overrides _beforeTokenTransfer
+     * see {https://docs.openzeppelin.com/contracts/4.x/api/token/erc721#ERC721-_beforeTokenTransfer-address-address-uint256-uint256-}.
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
+    }
+
+    /**
+     * @dev Overrides supportsInterface
+     * see {https://docs.openzeppelin.com/contracts/4.x/api/utils#IERC165-supportsInterface-bytes4-}.
+     */
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721, ERC721Enumerable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /**
+     *
+     * @param ownerAddress address of owner.
+     * @return tokensOwned uint256 with IDs of owned tokens.
+     */
+    function getTokens(
+        address ownerAddress
+    ) public view returns (uint256[] memory) {
+        uint256 numTokensOwned = this.balanceOf(ownerAddress);
+        uint256[] memory tokensOwned = new uint256[](numTokensOwned);
+
+        for (uint256 index = 0; index < numTokensOwned; index++) {
+            tokensOwned[index] = this.tokenOfOwnerByIndex(ownerAddress, index);
+        }
+
+        return tokensOwned;
     }
 
     /**
@@ -92,10 +141,15 @@ contract WatchersRing is ERC721, Ownable, ReentrancyGuard, IWatchersRing {
     }
 
     /**
-     * @dev Returns the total number of minted lands.
-     * @return totalSupply uint256 the number of minted lands.
+     * @dev Returns the total number of minted rings.
+     * @return totalSupply uint256 the number of minted rings.
      */
-    function totalSupply() external view returns (uint256) {
+    function totalSupply()
+        public
+        view
+        override(ERC721Enumerable)
+        returns (uint256)
+    {
         return numMinted;
     }
 
@@ -125,7 +179,10 @@ contract WatchersRing is ERC721, Ownable, ReentrancyGuard, IWatchersRing {
      * @param to Address to approve transfer.
      * @param tokenId Token be transferred allowed by to.
      */
-    function approve(address to, uint256 tokenId) public virtual override {
+    function approve(
+        address to,
+        uint256 tokenId
+    ) public virtual override(IERC721, ERC721) {
         require(!_deniedMarketplaces[to], "Invalid Marketplace");
         super.approve(to, tokenId);
     }
@@ -138,7 +195,7 @@ contract WatchersRing is ERC721, Ownable, ReentrancyGuard, IWatchersRing {
     function setApprovalForAll(
         address operator,
         bool approved
-    ) public virtual override {
+    ) public virtual override(IERC721, ERC721) {
         require(!_deniedMarketplaces[operator], "Invalid Marketplace");
         super.setApprovalForAll(operator, approved);
     }
@@ -153,7 +210,7 @@ contract WatchersRing is ERC721, Ownable, ReentrancyGuard, IWatchersRing {
     function isApprovedForAll(
         address owner,
         address operator
-    ) public view virtual override returns (bool) {
+    ) public view virtual override(IERC721, ERC721) returns (bool) {
         require(!_deniedMarketplaces[operator], "Invalid Marketplace");
         return super.isApprovedForAll(owner, operator);
     }
@@ -166,7 +223,7 @@ contract WatchersRing is ERC721, Ownable, ReentrancyGuard, IWatchersRing {
      */
     function getApproved(
         uint256 tokenId
-    ) public view virtual override returns (address) {
+    ) public view virtual override(IERC721, ERC721) returns (address) {
         address addr = super.getApproved(tokenId);
         require(!_deniedMarketplaces[addr], "Invalid Marketplace");
         return addr;

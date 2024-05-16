@@ -69,7 +69,7 @@ describe("🔥 Test getters and setters", function () {
 
 
 describe("🔥 Mint test", function () {
-    it("Test single mints + withdrawal functions", async function () {
+    it("Test single mints + withdrawal functions + test enumerability", async function () {
         const [owner] = await ethers.getSigners();
 
         const WatchersRing = await ethers.getContractFactory("WatchersRing");
@@ -131,6 +131,11 @@ describe("🔥 Mint test", function () {
         expect((await watchersRingMinter.getTokenIdRingType(tokenIds[0]))).to.lessThan(101);
         console.log("Distribution of rings minted by type (101 rings):");
         console.log(await watchersRingMinter.getTotalMintedRingsByType());
+
+        // Test enumerablity
+        const tokensOwned = await watchersRing.getTokens(owner.address);
+        expect(tokensOwned.length).to.equal(101);
+        console.log(tokensOwned);
 
         // Withdraw test
         var beforeWithdraw = await watchersRingMinter.provider.getBalance(owner.address);
