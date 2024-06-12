@@ -2,24 +2,18 @@
 
 // Solidity files have to start with this pragma.
 // It will be used by the Solidity compiler to validate its version.
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./ERC721Common.sol";
 import "./IWatchersRing.sol";
 
 // This is the main building block for smart contracts.
-contract WatchersRing is
-    ERC721,
-    ERC721Enumerable,
-    Ownable,
-    ReentrancyGuard,
-    IWatchersRing
-{
+contract WatchersRing is ERC721Common, Ownable, ReentrancyGuard, IWatchersRing {
     using Strings for uint256;
 
     /// @notice Maximum supply of total rings.
@@ -44,11 +38,32 @@ contract WatchersRing is
 
     /**
      * @dev Constructor of the contract.
-     * @param baseURI string The initial base URI for the token metadata URL.
+     * @param _baseURI string The initial base URI for the token metadata URL.
      * @notice We pass the name and symbol to the ERC721 constructor.
      */
-    constructor(string memory baseURI) ERC721("WatchersRing", "WR") {
-        baseTokenURI = baseURI;
+    constructor(
+        string memory _baseURI
+    ) ERC721Common("WatchersRing", "WR", _baseURI) {
+        baseTokenURI = _baseURI;
+        _baseTokenURI = _baseURI;
+    }
+
+    /**
+     * @dev Pause contract.
+     */
+    function pauseContract() external onlyOwner {
+        if (!this.paused()) {
+            _pause();
+        }
+    }
+
+    /**
+     * @dev Unpause contract.
+     */
+    function unpauseContract() external onlyOwner {
+        if (this.paused()) {
+            _unpause();
+        }
     }
 
     /**
@@ -60,7 +75,7 @@ contract WatchersRing is
         address to,
         uint256 firstTokenId,
         uint256 batchSize
-    ) internal override(ERC721, ERC721Enumerable) {
+    ) internal override(ERC721Common) {
         super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
 
@@ -70,7 +85,7 @@ contract WatchersRing is
      */
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC721, ERC721Enumerable) returns (bool) {
+    ) public view virtual override(ERC721Common) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -106,6 +121,8 @@ contract WatchersRing is
         if (numMinted >= MAX_SUPPLY) {
             revert NoRingsAvailable();
         }
+
+        require(!paused(), "Minting is paused");
 
         require(_msgSender() == minterAddress, "Not a minter");
 
@@ -154,15 +171,24 @@ contract WatchersRing is
     }
 
     /**
+     * @dev Returns the base URI of the token.
+     * @return baseTokenURI String value of base Token URI.
+     */
+    function getBaseURI() external view returns (string memory) {
+        return baseTokenURI;
+    }
+
+    /**
      * Only the owner can do these things.
      */
 
     /**
-     * @dev Sets a new base URI.
-     * @param newBaseURI string the new token base URI.
+     * @dev Sets a new base URI
+     * @param newBaseURI string the new token base URI
      */
-    function setBaseURI(string calldata newBaseURI) public onlyOwner {
+    function setNewBaseURI(string calldata newBaseURI) external onlyOwner {
         baseTokenURI = newBaseURI;
+        _baseTokenURI = newBaseURI;
     }
 
     /**

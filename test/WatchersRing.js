@@ -164,6 +164,66 @@ describe("🔥 Mint test", function () {
     });
 });
 
+describe("🔥 Mint test", function () {
+    it("Pausing contract should pause minting", async function () {
+        const [user, signer, hacker] = await ethers.getSigners();
+
+        // Deploy contracts
+        const WatchersRing = await ethers.getContractFactory("WatchersRing");
+        const watchersRing = await WatchersRing.deploy(
+            "http://d9grnqbmunyb9.cloudfront.net/GetRingId?RingId="
+        );
+
+        const WatchersRingMinter = await ethers.getContractFactory("WatchersRingMinter");
+        const watchersRingMinter = await WatchersRingMinter.deploy(watchersRing.address);
+        watchersRing.setMinter(watchersRingMinter.address);
+
+        // Set available rings
+        await watchersRingMinter.setRingsAvailable(100);
+        const availableRings = await watchersRingMinter.getInitialRings();
+        expect(availableRings).to.deep.equal(100);
+
+        const ringPrice = ethers.utils.parseEther("0.01");
+        const mintClaimStartTime = ethers.BigNumber.from("0");
+        const mintListStartTime = ethers.BigNumber.from("0");
+        const mintStartTime = ethers.BigNumber.from("0");
+
+        await watchersRingMinter.setPrice(ringPrice);
+        await watchersRingMinter.setPublicMintStartTime(mintStartTime);
+        await watchersRingMinter.setMintlistStartTime(mintListStartTime);
+        await watchersRingMinter.setClaimsStartTime(mintClaimStartTime);
+
+        // Verify only owner can pause contract minting
+        await expect(watchersRing.connect(hacker).pauseContract()).to.be.revertedWith(
+            "Ownable: caller is not the owner"
+        );
+
+        // Pause contract minting
+        await watchersRing.pauseContract();
+
+        // Should revert with paused minting 
+        await expect(
+            watchersRingMinter.mint(1, { value: ethers.utils.parseEther("0.01") })
+        ).to.be.revertedWith("Minting is paused");
+
+        // Verify only owner can unpause contract minting
+        await expect(watchersRing.connect(hacker).unpauseContract()).to.be.revertedWith(
+            "Ownable: caller is not the owner"
+        );
+
+        // Unpause contract minting
+        await watchersRing.unpauseContract();
+
+        // Verify signature and mint token
+        await watchersRingMinter.mint(1, { value: ethers.utils.parseEther("0.01") });
+
+        // Check if token was minted by enumerability
+        // Test enumerablity
+        const tokensOwned = await watchersRing.getTokens(user.address);
+        expect(tokensOwned.length).to.equal(1);
+    });
+});
+
 describe("🔥 URI test", function () {
     it("URI should work", async function () {
         const [owner] = await ethers.getSigners();
@@ -182,7 +242,7 @@ describe("🔥 URI test", function () {
 
         const tokenUri_0 = await watchersRing.tokenURI(tokenId);
         await expect(tokenUri_0).to.be.equal("http://d9grnqbmunyb9.cloudfront.net/GetRingId?RingId=1099511628032");
-        await watchersRing.setBaseURI("https://api.runiverse.world/GetPlotInfo?PlotId=")
+        await watchersRing.setNewBaseURI("https://api.runiverse.world/GetPlotInfo?PlotId=")
 
         const tokenUri_1 = await watchersRing.tokenURI(tokenId);
         await expect(tokenUri_1).to.be.equal("https://api.runiverse.world/GetPlotInfo?PlotId=1099511628032");

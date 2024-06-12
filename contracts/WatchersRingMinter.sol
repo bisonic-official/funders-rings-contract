@@ -2,7 +2,7 @@
 
 // Solidity files have to start with this pragma.
 // It will be used by the Solidity compiler to validate its version.
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
