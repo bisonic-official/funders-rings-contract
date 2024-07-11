@@ -21,26 +21,30 @@ async function main() {
     const contractWithSigner = contract.connect(signer);
 
     // Pause contract
-    let transaction = await contractWithSigner.pauseContract();
-    await transaction.wait();
-    console.log("Contract paused!");
+    // let transaction = await contractWithSigner.pauseContract();
+    // await transaction.wait();
+    // console.log("Contract paused!");
 
     // Unpause contract
-    transaction = await contractWithSigner.unpauseContract();
-    await transaction.wait();
-    console.log("Contract unpaused!");
+    // transaction = await contractWithSigner.unpauseContract();
+    // await transaction.wait();
+    // console.log("Contract unpaused!");
 
     // Set new URI for Tokens
     const newBaseURI = '' // New URI
-    transaction = await contractWithSigner.setNewBaseURI(newBaseURI);
-    await transaction.wait();
+    // transaction = await contractWithSigner.setNewBaseURI(
+    //     newBaseURI, { gasPrice: 30000000000 }
+    // );
+    // await transaction.wait();
     console.log("New base URI set:", await contract.getBaseURI());
 
     // Set new minter address
     const newMinter = '' // New minter address
-    transaction = await contractWithSigner.setMinter(newMinter);
-    await transaction.wait();
-    console.log("New minter set:", await contract.minterAddress);
+    // transaction = await contractWithSigner.setMinter(
+    //     newMinter, { gasPrice: 30000000000 }
+    // );
+    // await transaction.wait();
+    console.log("New minter set:", await contract.minterAddress());
 }
 
 main()

@@ -1,8 +1,9 @@
 # Extras
 .DS_Store
-*.log
 node_modules
-cache/
+cache
+deployments
+*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
